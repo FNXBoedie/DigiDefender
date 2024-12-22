@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digi Defender</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: monospace;
+        }
+
+        #game-container {
+            width: 1000px;
+            height: 750px;
+            position: relative;
+            border: 2px solid #0f0;
+            box-shadow: 0 0 20px #0f0;
+            overflow: hidden; /* Ensure stars don't overflow the container */
+            background-color: #000; /* Solid dark background */
+        }
+
+        .star {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: twinkle 1.5s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Background Layers */
+        .background-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .grid-line {
+            position: absolute;
+            background-color: #006400;
+        }
+
+        .grid-line.horizontal {
+            width: 100%;
+            height: 1px;
+        }
+
+        .grid-line.vertical {
+            height: 100%;
+            width: 1px;
+        }
+
+        .grid-line.bottom {
+            bottom: 0;
+            width: 100%;
+            height: 1px;
+            background-color: #006400;
+        }
+
+        .grid-line.right {
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background-color: #006400;
+        }
+
+        .grid-line.right-origin {
+            position: absolute;
+            right: 0;
+            height: 1px;
+            background-color: #006400;
+        }
+
+        .grid-line.bottom-origin {
+            position: absolute;
+            bottom: 0;
+            width: 1px;
+            background-color: #006400;
+        }
+
+        /* Spaceship */
+        #spaceship {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        #spaceship .body {
+            position: absolute;
+            width: 20px;
+            height: 40px;
+            background-color: #f0f0f0;
+            border-radius: 50% 50% 0 0;
+            top: 10px;
+            left: 10px;
+        }
+
+        #spaceship .wing {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid #d3d3d3;
+        }
+
+        #spaceship .wing.left {
+            left: 0;
+            top: 20px;
+        }
+
+        #spaceship .wing.right {
+            right: 0;
+            top: 20px;
+        }
+
+        #spaceship .propellant {
+            position: absolute;
+            width: 6px;
+            height: 12px;
+            background-color: #ff9800;
+            border-radius: 50%;
+            bottom: -12px;
+            left: 17px;
+            animation: flicker 0.2s infinite alternate;
+        }
+        
+        #spaceship .propellant.moving {
+            height: 18px;
+            bottom: -18px;
+        }
+
+        #spaceship .propellant.fast {
+            height: 24px;
+            bottom: -24px;
+        }
+
+        /* Laser */
+        .laser {
+            position: absolute;
+            width: 4px;
+            height: 20px;
+            background-color: #0f0;
+            border-radius: 2px;
+            box-shadow: 0 0 10px #0f0;
+            z-index: 5;
+        }
+
+        /* Virus */
+        .virus {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .virus.d0 {
+            background-image: url('Images/d0948.png');
+            width: 96px;
+            height: 96px;
+        }
+
+        .virus.ateljee {
+            background-image: url('Images/ateljee48.png');
+        }
+
+        .virus.stadskantoor {
+            background-image: url('Images/stadskantoor.png');
+        }
+
+        .virus-inner {
+            display: none; /* Remove inner div as we're using an image */
+        }
+        
+        /* Virus Fragments */
+        .virus-fragment {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            transition: all 0.3s ease-out;
+        }
+
+        .virus-fragment.d0 {
+            background-image: url('d0948.png');
+            width: 48px;
+            height: 48px;
+        }
+
+        .virus-fragment.ateljee {
+            background-image: url('ateljee16.png');
+        }
+
+        .virus-fragment.stadskantoor {
+            background-image: url('stadskantoor.png');
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #0f0;
+            z-index: 20;
+        }
+
+        #score {
+            display: flex;
+            margin-bottom: 5px;
+        }
+
+        #afsprakennotas-counter {
+            margin-bottom: 5px;
+        }
+
+        #inmengingen-counter {
+            margin-bottom: 5px;
+        }
+
+        #subsidiestop-counter {
+            margin-bottom: 5px;
+        }
+
+        #weapon-cooldown {
+            width: 100px;
+            height: 10px;
+            background-color: #444;
+            border: 1px solid #0f0;
+        }
+
+        #weapon-charge {
+            height: 100%;
+            background-color: #0f0;
+        }
+        
+        /* Screens */
+        #start-screen, #settings-screen, #game-over-screen, #rules-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            color: #0f0;
+            text-align: center;
+        }
+
+        #game-over-screen, #rules-screen {
+            display: none;
+        }
+        
+        button {
+            background-color: #080808;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            font-family: monospace;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background-color: #003200;
+        }
+
+        #settings-screen {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .speed-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .speed-option {
+            cursor: pointer;
+            padding: 10px 20px;
+            border: 2px solid #0f0;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .speed-option:hover {
+            background-color: #0f0;
+            color: #000;
+        }
+
+        .speed-option.selected {
+            background-color: #0f0;
+            color: #000;
+            transform: scale(1.1);
+        }
+        
+        /* Animations */
+        @keyframes flicker {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0.5;
+            }
+        }
+
+        .virus-fragment.exploding {
+            transform: scale(1.5);
+            opacity: 0;
+        }
+
+        .boss-health-bar {
+            background-color: red;
+            transition: width 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="hud">
+            <div id="score"></div>
+            <div id="afsprakennotas-counter">Afsprakennotas: 0</div>
+        <div id="inmengingen-counter">Inmengingen: 0</div>
+        <div id="meldingen-counter">Meldingen: 0</div>
+        <div id="total-counter">Totaal: 0/15</div>
+        <div id="subsidiestop-counter">Subsidiestop: 0%</div>
+        </div>
+        <div id="spaceship">
+            <div class="body"></div>
+            <div class="wing left"></div>
+            <div class="wing right"></div>
+            <div class="propellant"></div>
+        </div>
+
+        <div id="start-screen">
+            <h1>Digi Defender</h1>
+            <button id="start-game">Start Game</button>
+            <button id="settings">Instellingen</button>
+            <button id="rules">Spelregels</button>
+        </div>
+
+        <div id="settings-screen">
+            <h2>Settings</h2>
+            <div class="speed-selector">
+                <div class="speed-option" data-speed="slow">Traag</div>
+                <div class="speed-option" data-speed="normal">Normaal</div>
+                <div class="speed-option" data-speed="fast">Snel</div>
+            </div>
+            <div class="music-selector">
+                <label for="background-music">Background Music:</label>
+                <select id="background-music">
+                    <option value="Audio/8bitarcade.mp3" selected>8-bit arcade</option>
+                    <option value="Audio/hardcore.mp3">Speedcore 1996</option>
+                    <option value="Audio/christmass.mp3">Merry X-Mas</option>
+                </select>
+            </div>
+            <button id="save-settings">Opslaan</button>
+            <button id="back-to-menu">Terug</button>
+        </div>
+        <audio id="background-music-player" loop></audio>
+
+        <div id="rules-screen">
+            <h2>Spelregels</h2>
+            <p>Verdedig het Digipunt!</p>
+            <p>Wanneer je een Digipunt Power-up raakt, dan kan je voor 6 seconden sneller schieten.</p>
+            <p>Voor elke berisping die de bodem bereikt krijg je één deductie. Voor elk fragment een halve deductie.</p>
+            <p>Bij 15 berispingen wordt je Digipunt gesloten.</p>
+            <p>Bereikt Stad Gent de overkant? Dan worden alle subsidies ingetrokken en is het Game Over voor iedereen!</p>
+           
+            <button id="back-to-menu-from-rules">Terug</button>
+        </div>
+
+        <div id="game-over-screen">
+            <h1>Helaas!</h1>
+            <h1>Je Digipunt wordt gesloten!</h1>
+            <p>Jouw Score: <span id="final-score"></span></p>
+            <button id="restart-game">Opnieuw Spelen</button>
+        </div>   
+        <img id="power-up-image" src="Images/digi48.png" style="position: absolute; width: 48px; height: 48px;">
+    </div>
+
+        <audio id="laser-sound" src="Audio/laser.mp3" volume="0.1"></audio>
+    <audio id="explosion-sound" src="Audio/explosion.mp3"></audio>
+    <audio id="alarm-sound" src="Audio/alarm.mp3"></audio>
+    <audio id="bigexplosion-sound" src="Audio/bigexplosion.mp3"></audio>
+    <audio id="loser-sound" src="Audio/loser.mp3"></audio>
+    <script>
+        // --- Game Variables ---
+        const gameContainer = document.getElementById('game-container');
+        const spaceship = document.getElementById('spaceship');
+        const propellant = spaceship.querySelector('.propellant');
+        const hudScore = document.getElementById('score');
+        const afsprakennotasElement = document.getElementById('afsprakennotas-counter');
+        const inmengingenElement = document.getElementById('inmengingen-counter');
+        const meldingenElement = document.getElementById('meldingen-counter');
+        const totalCounterElement = document.getElementById('total-counter');
+        const subsidiestopElement = document.getElementById('subsidiestop-counter');
+        const weaponCooldownBar = document.getElementById('weapon-cooldown');
+        const weaponChargeBar = document.getElementById('weapon-charge');
+        const startScreen = document.getElementById('start-screen');
+        const settingsScreen = document.getElementById('settings-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const rulesScreen = document.getElementById('rules-screen');
+        const finalScoreElement = document.getElementById('final-score');
+     
+        const powerUpImage = document.getElementById('power-up-image');
+
+        let score = 0;
+        let lives = 3;
+        let afsprakennotasCount = 0;
+        let inmengingenCount = 0;
+        let meldingenCount = 0;
+        let totalCount = 0;
+        let subsidiestopCounter = 0; // Initialize the Subsidiestop counter at 0%
+        let isGameOver = false;
+        let isGameRunning = false;
+        let isShooting = false;
+        let originalWeaponCooldown = 150; // Assuming this is the original cooldown
+        let weaponCooldown = originalWeaponCooldown; // Current cooldown
+        let canShoot = true;
+        let gameSpeed = 'normal'; // Default speed
+
+        let spaceshipX = 380;
+        let spaceshipY = 270;
+        let spaceshipVX = 0;
+        let spaceshipVY = 0;
+        let acceleration = 0.2;
+        let friction = 0.98;
+
+        let viruses = [];
+        let virusSpawnInterval = 4000; // milliseconds
+        let virusSpawnTimer = null;
+        let gameLoopInterval = null;
+        
+        let isMoving = false;
+
+        // Enhanced Movement Variables
+        const movementConfig = {
+            slow: {
+                baseSpeed: 8,
+                acceleration: 0.1,
+                maxSpeed: 8
+            },
+            normal: {
+                baseSpeed: 10,
+                acceleration: 0.4,
+                maxSpeed: 10
+            },
+            fast: {
+                baseSpeed: 12,
+                acceleration: 0.4,
+                maxSpeed: 12
+            }
+        };
+
+        let currentMovement = {
+            x: 0,
+            y: 0,
+            speedX: 0,
+            speedY: 0
+        };
+
+        let originalMoveSpeed = 0;
+        let moveSpeed = 0;
+
+        let player = {
+            speedX: 0,
+            speedY: 0
+        };
+
+        // Boss enemy properties
+        let bossEnemy = null; // Start with no boss enemy
+
+        function createBossEnemy() {
+            const gameContainer = document.getElementById('game-container');
+            const containerWidth = gameContainer.clientWidth;
+            // Generate a random x position within the container width
+            const randomX = Math.random() * (containerWidth - 100); // Assuming boss image width is 100px
+
+            bossEnemy = {
+                hitPoints: 64, // Adjusted hit points to require 8 shots to kill
+                x: randomX,
+                y: 0, // Start from the top
+                speed: 1.5, // Set speed to be slower than other enemies
+                damage: function() {
+                    this.hitPoints -= 8; // Change from 10 to 8 to require 8 shots to kill
+                    const healthBar = this.healthBar;
+                    if (healthBar) {
+                        healthBar.style.width = (this.hitPoints / 64) * 100 + '%'; // Update health bar width
+                    }
+                    if (this.hitPoints <= 0) {
+                        console.log('Boss defeated!');
+                         // Play big explosion sound
+                        const bigExplosionSound = document.getElementById('bigexplosion-sound');
+                        bigExplosionSound.currentTime = 0;
+                        bigExplosionSound.play();
+                        this.remove();
+                        bossEnemy = null; // Reset bossEnemy to null after defeat
+                    }
+                },
+                remove: function() {
+                    const bossImage = document.getElementById('boss-image');
+                    if (bossImage) {
+                        bossImage.remove(); // Remove the boss image from the DOM
+                    }
+                    const healthBarContainer = this.healthBarContainer;
+                    if (healthBarContainer) {
+                        healthBarContainer.remove(); // Remove the health bar container from the DOM
+                    }
+                },
+                move: function() {
+                    // Smooth falling logic
+                    if (isGameRunning) {
+                        this.y += this.speed;
+                    }
+                    const bossImage = document.getElementById('boss-image');
+                    if (bossImage) {
+                        bossImage.style.left = this.x + 'px';
+                        bossImage.style.top = this.y + 'px';
+                        bossImage.style.transition = 'top 0.1s linear'; // Add transition for smooth movement
+                    }
+                    const healthBarContainer = this.healthBarContainer;
+                    if (healthBarContainer) {
+                        healthBarContainer.style.left = (this.x + (bossImage.clientWidth / 2) - 50) + 'px'; // Center the health bar
+                        healthBarContainer.style.top = (this.y + bossImage.clientHeight + 5) + 'px'; // Position below the boss
+                        healthBarContainer.style.transition = 'left 0.1s linear, top 0.1s linear'; // Add transition for smooth movement
+                    }
+                    // Check if boss has reached the bottom of the container
+                    const gameContainer = document.getElementById('game-container');
+                    if (this.y > gameContainer.clientHeight - bossImage.clientHeight) {
+                        this.y = gameContainer.clientHeight - bossImage.clientHeight; // Stop at the bottom
+                        subsidiestopCounter = 100; // Set counter to 100%
+                        updateSubsidiestopCounter(); // Update the display
+                        gameOver(); // Trigger game over if boss hits the bottom
+                    }
+                },
+                icon: 'stadgent128.png'
+            };
+        }
+
+        // Function to randomly spawn the boss enemy
+        function spawnBossEnemy() {
+            if (isGameRunning && !bossEnemy && Math.random() < 0.40) { // Only spawn if game is running and no boss exists
+                console.log('Boss enemy has appeared!');
+                createBossEnemy(); // Create the boss enemy
+                let bossImage = document.createElement('img');
+                bossImage.src = bossEnemy.icon;
+                bossImage.alt = 'Boss Enemy';
+                bossImage.id = 'boss-image'; // Set an ID for easy access
+                bossImage.style.position = 'absolute';
+                bossImage.style.top = bossEnemy.y + 'px';
+                bossImage.style.left = bossEnemy.x + 'px';
+                const gameContainer = document.getElementById('game-container');
+                gameContainer.appendChild(bossImage); // Append to the game container
+
+                // Create a health bar for the boss
+                let healthBarContainer = document.createElement('div');
+                healthBarContainer.style.position = 'absolute';
+                healthBarContainer.style.top = (bossEnemy.y + bossImage.clientHeight + 5) + 'px'; // Position below the boss
+                healthBarContainer.style.left = (bossEnemy.x + (bossImage.clientWidth / 2) - 50) + 'px'; // Center the health bar
+                healthBarContainer.style.width = '100px';
+                healthBarContainer.style.height = '10px';
+                healthBarContainer.style.border = '1px solid #0f0';
+                healthBarContainer.style.backgroundColor = '#444';
+                let healthBar = document.createElement('div');
+                healthBar.className = 'boss-health-bar';
+                healthBar.style.width = '100%';
+                healthBar.style.height = '100%';
+                healthBar.style.backgroundColor = '#0f0';
+                healthBarContainer.appendChild(healthBar);
+                gameContainer.appendChild(healthBarContainer);
+                bossEnemy.healthBarContainer = healthBarContainer;
+                bossEnemy.healthBar = healthBar;
+
+                // Start boss movement
+                setInterval(() => {
+                    bossEnemy.move();
+                    checkCollision(); // Check for collisions with player shots
+                }, 100); // Move every 100ms
+            } else {
+                console.log('Boss did not spawn this time.'); // Log when boss does not spawn
+            }
+        }
+
+        // Function to check for collisions with player shots
+        function checkCollision() {
+            const bossImage = document.getElementById('boss-image');
+            if (!bossImage) return;
+            const bossRect = bossImage.getBoundingClientRect();
+            // Assuming playerShots is an array of player shot elements
+            const playerShots = document.querySelectorAll('.laser');
+            playerShots.forEach(shot => {
+                const shotRect = shot.getBoundingClientRect();
+                if (
+                    shotRect.x < bossRect.x + bossRect.width &&
+                    shotRect.x + shotRect.width > bossRect.x &&
+                    shotRect.y < bossRect.y + bossRect.height &&
+                    shotRect.y + shotRect.height > bossRect.y
+                ) {
+                    bossEnemy.damage(); // Apply damage to the boss
+                    shot.remove(); // Remove the shot from the DOM
+                }
+            });
+        }
+
+        // Call spawnBossEnemy periodically, e.g., every 20 seconds
+        setInterval(spawnBossEnemy, 20000);
+
+        // --- Event Listeners ---
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+        
+        document.getElementById('start-game').addEventListener('click', startGame);
+        document.getElementById('settings').addEventListener('click', openSettings);
+        document.getElementById('back-to-menu').addEventListener('click', closeSettings);
+        document.getElementById('restart-game').addEventListener('click', restartGame);
+        document.getElementById('save-settings').addEventListener('click', saveSettings);
+        document.getElementById('rules').addEventListener('click', openRules);
+        document.getElementById('back-to-menu-from-rules').addEventListener('click', closeRules);
+
+        // --- Functions ---
+
+        // --- Game Initialization ---
+        function initializeGame() {
+            updateHUD();
+            retrieveSavedSpeed();
+            updateGameSpeed();
+            
+            // Retrieve saved background music
+            const savedMusic = localStorage.getItem('digiRoidBackgroundMusic');
+            const backgroundMusicPlayer = document.getElementById('background-music-player');
+            if (savedMusic) {
+                backgroundMusicPlayer.src = savedMusic;
+            } else {
+                backgroundMusicPlayer.src = '8bitarcade.mp3';
+            }
+            backgroundMusicPlayer.play();
+            
+            // Ensure spaceship starts in center
+            const spaceship = document.getElementById('spaceship');
+            const gameContainer = document.getElementById('game-container');
+            
+            const centerX = (gameContainer.clientWidth - spaceship.clientWidth) / 2;
+            const centerY = (gameContainer.clientHeight - spaceship.clientHeight) / 2;
+            
+            spaceship.style.left = `${centerX}px`;
+            spaceship.style.top = `${centerY}px`;
+            
+            gameLoop(); // Start the game loop
+            createStars(); // Create the starry background
+        }
+        
+        // --- Start Screen and Settings ---
+        function startGame() {
+            startScreen.style.display = 'none';
+            isGameRunning = true;
+            resetGame();
+            const alarmSound = document.getElementById('alarm-sound');
+            alarmSound.currentTime = 0;
+            alarmSound.play();
+            virusSpawnTimer = setInterval(spawnVirus, virusSpawnInterval);
+        }
+
+        function openSettings() {
+            startScreen.style.display = 'none';
+            settingsScreen.style.display = 'flex';
+            
+            // Highlight the currently selected speed
+            const speedOptions = document.querySelectorAll('.speed-option');
+            speedOptions.forEach(option => {
+                option.classList.remove('selected');
+                if (option.dataset.speed === gameSpeed) {
+                    option.classList.add('selected');
+                }
+            });
+
+            // Add click event listeners to speed options
+            speedOptions.forEach(option => {
+                option.onclick = function() {
+                    speedOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                };
+            });
+        }
+
+        function saveSettings() {
+            // Get the selected speed
+            const selectedSpeedOption = document.querySelector('.speed-option.selected');
+            if (selectedSpeedOption) {
+                gameSpeed = selectedSpeedOption.dataset.speed;
+                
+                // Save to local storage
+                localStorage.setItem('digiRoidGameSpeed', gameSpeed);
+                
+                // Apply speed to game (you'll need to implement speed logic in your game loop)
+                updateGameSpeed();
+
+                // Get selected background music
+                const selectedMusic = document.getElementById('background-music').value;
+                localStorage.setItem('digiRoidBackgroundMusic', selectedMusic);
+                playBackgroundMusic(selectedMusic);
+                
+                closeSettings();
+            }
+        }
+
+        function playBackgroundMusic(musicFile) {
+            const backgroundMusicPlayer = document.getElementById('background-music-player');
+            backgroundMusicPlayer.src = musicFile;
+            backgroundMusicPlayer.play();
+        }
+
+        function updateGameSpeed() {
+            // Adjust movement configuration based on selected speed
+            switch(gameSpeed) {
+                case 'slow':
+                    currentMovement.speedX = movementConfig.slow.baseSpeed;
+                    currentMovement.speedY = movementConfig.slow.baseSpeed;
+                    break;
+                case 'normal':
+                    currentMovement.speedX = movementConfig.normal.baseSpeed;
+                    currentMovement.speedY = movementConfig.normal.baseSpeed;
+                    break;
+                case 'fast':
+                    currentMovement.speedX = movementConfig.fast.baseSpeed;
+                    currentMovement.speedY = movementConfig.fast.baseSpeed;
+                    break;
+            }
+        }
+
+        function closeSettings() {
+            settingsScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+        }
+
+        function retrieveSavedSpeed() {
+            // Retrieve saved speed from local storage
+            const savedSpeed = localStorage.getItem('digiRoidGameSpeed');
+            if (savedSpeed) {
+                gameSpeed = savedSpeed;
+                updateGameSpeed();
+            }
+        }
+
+        // --- Rules Screen ---
+        function openRules() {
+            startScreen.style.display = 'none';
+            rulesScreen.style.display = 'flex';
+        }
+
+        function closeRules() {
+            rulesScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+        }
+
+        // --- Game Over ---
+        function gameOver() {
+            updateSubsidiestopCounter(); // Update the display
+            isGameOver = true;
+            isGameRunning = false;
+            clearInterval(gameLoopInterval);
+            clearInterval(virusSpawnTimer);
+            finalScoreElement.textContent = score;
+            const loserSound = document.getElementById('loser-sound');
+            loserSound.currentTime = 0;
+            loserSound.play();
+            gameOverScreen.style.display = 'flex';
+        }
+
+        function restartGame() {
+            gameOverScreen.style.display = 'none';
+            resetGame();
+            startGame();
+        }
+
+        // --- Reset Game State ---
+        function resetGame() {
+            // Reset spaceship to exact center
+            const spaceship = document.getElementById('spaceship');
+            const gameContainer = document.getElementById('game-container');
+            
+            // Calculate exact center
+            const centerX = (gameContainer.clientWidth - spaceship.clientWidth) / 2;
+            const centerY = (gameContainer.clientHeight - spaceship.clientHeight) / 2;
+            
+            spaceship.style.left = `${centerX}px`;
+            spaceship.style.top = `${centerY}px`;
+            
+            // Reset movement variables
+            currentMovement = {
+                x: 0,
+                y: 0,
+                speedX: 0,
+                speedY: 0
+            };
+            
+            // Clear existing viruses and lasers
+            clearViruses();
+            const existingLasers = document.querySelectorAll('.laser');
+            existingLasers.forEach(laser => laser.remove());
+            
+            // Reset game state variables
+            lives = 3;
+            score = 0;
+            afsprakennotasCount = 0;
+            inmengingenCount = 0;
+            subsidiestopCounter = 0; // Reset Subsidiestop counter
+            updateSubsidiestopCounter();
+            isGameOver = false;
+            isGameRunning = true;
+            
+            // Update HUD
+            updateHUD();
+            
+            // Re-enable virus spawning
+            virusSpawnTimer = setInterval(spawnVirus, virusSpawnInterval);
+        }
+
+        // --- HUD Update ---
+        function updateHUD() {
+            const scoreElement = document.getElementById('score');
+            const afsprakennotasElement = document.getElementById('afsprakennotas-counter');
+            const inmengingenElement = document.getElementById('inmengingen-counter');
+            const meldingenElement = document.getElementById('meldingen-counter');
+            const totalCounterElement = document.getElementById('total-counter');
+            const subsidiestopElement = document.getElementById('subsidiestop-counter');
+
+            // Update score and counters
+            scoreElement.textContent = `Score: ${score}`;
+            afsprakennotasElement.textContent = `Afsprakennotas: ${afsprakennotasCount.toFixed(1)}`;
+            inmengingenElement.textContent = `Inmengingen: ${inmengingenCount.toFixed(1)}`;
+            meldingenElement.textContent = `Meldingen: ${meldingenCount.toFixed(1)}`;
+            totalCounterElement.textContent = `Total: ${totalCount}/15`;
+            subsidiestopElement.textContent = `Subsidiestop: ${subsidiestopCounter}%`;
+        }
+
+        function updateSubsidiestopCounter() {
+            subsidiestopElement.textContent = `Subsidiestop: ${subsidiestopCounter}%`;
+        }
+
+        // --- Keyboard Input Handling ---
+        function handleKeyDown(event) {
+            const config = movementConfig[gameSpeed];
+            const spaceship = document.getElementById('spaceship');
+            const propellant = spaceship.querySelector('.propellant');
+
+            // Prevent default key behavior
+            event.preventDefault();
+
+            // Determine movement based on key pressed
+            switch(event.key) {
+                case 'ArrowLeft':
+                case 'a':
+                    currentMovement.x = -1;
+                    propellant.classList.add('moving');
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    currentMovement.x = 1;
+                    propellant.classList.add('moving');
+                    break;
+                case 'ArrowUp':
+                case 'w':
+                    currentMovement.y = -1;
+                    propellant.classList.add('moving');
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    currentMovement.y = 1;
+                    propellant.classList.add('moving');
+                    break;
+                case ' ':
+                    isShooting = true; // Start shooting
+                    break;
+            }
+
+            isMoving = true;
+        }
+
+        function handleKeyUp(event) {
+            const spaceship = document.getElementById('spaceship');
+            const propellant = spaceship.querySelector('.propellant');
+
+            // Reset movement based on key released
+            switch(event.key) {
+                case 'ArrowLeft':
+                case 'a':
+                    if (currentMovement.x < 0) currentMovement.x = 0;
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    if (currentMovement.x > 0) currentMovement.x = 0;
+                    break;
+                case 'ArrowUp':
+                case 'w':
+                    if (currentMovement.y < 0) currentMovement.y = 0;
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    if (currentMovement.y > 0) currentMovement.y = 0;
+                    break;
+                case ' ':
+                    isShooting = false; // Stop shooting
+                    break;
+            }
+
+            // Remove moving classes if no keys are pressed
+            if (!Object.values(currentMovement).some(val => val !== 0)) {
+                propellant.classList.remove('moving');
+                isMoving = false;
+            }
+        }
+
+        // --- Shooting ---
+        function shoot() {
+            if (!canShoot) return;
+
+            const spaceship = document.getElementById('spaceship');
+            const gameContainer = document.getElementById('game-container');
+            
+            // Calculate laser start position based on spaceship's current position
+            const spaceshipRect = spaceship.getBoundingClientRect();
+            const containerRect = gameContainer.getBoundingClientRect();
+            
+            const laserX = spaceshipRect.left - containerRect.left + (spaceshipRect.width / 2) - 2; // Center the laser
+            const laserY = spaceshipRect.top - containerRect.top;
+            
+            const laser = document.createElement('div');
+            laser.classList.add('laser');
+            laser.style.left = `${laserX}px`;
+            laser.style.top = `${laserY}px`;
+            
+            gameContainer.appendChild(laser);
+            
+            // Laser movement
+            const laserSpeed = 10;
+            function moveLaser() {
+                const currentTop = parseFloat(laser.style.top);
+                
+                // Collision detection with viruses
+                for (let i = viruses.length - 1; i >= 0; i--) {
+                    if (isColliding(laser, viruses[i].element)) {
+                        gameContainer.removeChild(laser);
+                        
+                        // If it's a full-size virus, break into fragments
+                        if (!viruses[i].isFragment) {
+                            destroyVirus(i);
+                        } else {
+                            // If it's a fragment, just remove it
+                            gameContainer.removeChild(viruses[i].element);
+                            viruses.splice(i, 1);
+                            
+                            // Increase score for fragment
+                            score += 15;
+                            updateHUD();
+                        }
+                        return;
+                    }
+                }
+                
+                if (currentTop > -20) {
+                    laser.style.top = `${currentTop - laserSpeed}px`;
+                    requestAnimationFrame(moveLaser);
+                } else {
+                    gameContainer.removeChild(laser);
+                }
+            }
+            moveLaser();
+            
+            // Play laser sound
+            const laserSound = document.getElementById('laser-sound');
+            laserSound.currentTime = 0; // Reset sound to beginning
+            laserSound.play();
+
+            // Weapon cooldown
+            canShoot = false;
+            setTimeout(() => {
+                canShoot = true;
+            }, weaponCooldown);
+        }
+
+        function updateWeaponCharge(chargePercent) {
+            weaponChargeBar.style.width = `${chargePercent}%`;
+        }
+
+
+        // --- Virus Management ---
+        function spawnVirus() {
+            if (isGameOver) return;
+
+            const gameContainer = document.getElementById('game-container');
+            const containerWidth = gameContainer.offsetWidth;
+
+            // Create virus element
+            const virus = document.createElement('div');
+            virus.classList.add('virus');
+
+            // Randomly choose virus type
+            const virusTypes = ['d0', 'ateljee', 'stadskantoor'];
+            const selectedType = virusTypes[Math.floor(Math.random() * virusTypes.length)];
+            virus.classList.add(selectedType);
+
+            // Randomize horizontal position
+            const randomX = Math.random() * (containerWidth - 48);
+            virus.style.left = `${randomX}px`;
+            virus.style.top = '-48px';  // Start above the container
+
+            // Add to game container
+            gameContainer.appendChild(virus);
+
+            // Set a default downward speed
+            let speed = 0.5 + Math.random(); // Slower downward speed
+            if (selectedType === 'stadskantoor') {
+                speed = 0.5 + Math.random();
+            }
+            viruses.push({
+                element: virus,
+                x: randomX,
+                y: -48,
+                speed: speed,
+                size: 48,
+                isFragment: false,
+                type: selectedType
+            });
+        }
+
+        function clearViruses() {
+            viruses.forEach(virus => {
+                gameContainer.removeChild(virus.element);
+            });
+            viruses = [];
+        }
+
+        function destroyVirus(index) {
+            if (index < 0 || index >= viruses.length) return;
+
+            const virus = viruses[index];
+            const virusElement = virus.element;
+
+            // Remove the original virus from the game and array
+            gameContainer.removeChild(virusElement);
+            viruses.splice(index, 1);
+
+            // Create multiple fragments
+            const fragmentCount = 1 + Math.floor(Math.random() * 3); // 1 to 3 fragments
+            for (let i = 0; i < fragmentCount; i++) {
+                const fragment = document.createElement('div');
+                fragment.classList.add('virus-fragment');
+                fragment.classList.add(virus.type);
+
+                // Scatter in both left and right directions
+                const angle = (Math.random() - 0.5) * Math.PI; // Full horizontal spread
+                const speed = 1 + Math.random() * 2; // Reduced speed
+                const spreadRadius = 40; // Slightly increased spread to account for larger size
+
+                // Calculate scattered position
+                const fragmentX = virus.x + Math.cos(angle) * spreadRadius;
+                const fragmentY = virus.y + Math.abs(Math.sin(angle) * spreadRadius);
+
+                fragment.style.left = `${fragmentX}px`;
+                fragment.style.top = `${fragmentY}px`;
+
+                gameContainer.appendChild(fragment);
+
+                // Add fragment to viruses array with controlled, slower movement
+                viruses.push({
+                    element: fragment,
+                    x: fragmentX,
+                    y: fragmentY,
+                    speedX: Math.cos(angle) * speed * 0.5, // Reduced horizontal speed
+                    speedY: Math.max(0.5, Math.abs(Math.sin(angle)) * speed * 0.5), // Much slower vertical speed
+                    rotation: 0,
+                    rotationSpeed: 1 + Math.random() * 3, // Slower rotation
+                    direction: Math.random() < 0.5 ? -1 : 1,
+                    isFragment: true,
+                    type: virus.type
+                });
+            }
+
+            // Play explosion sound
+            const explosionSound = document.getElementById('explosion-sound');
+            explosionSound.currentTime = 0;
+            explosionSound.play();
+
+            // Increase score
+            score += 10;
+            updateHUD();
+        }
+
+        function isColliding(element1, element2) {
+            if (!element1 || !element2) return false;
+
+            const rect1 = element1.getBoundingClientRect();
+            const rect2 = element2.getBoundingClientRect();
+
+            // Add a small overlap threshold to improve collision detection
+            const overlapThreshold = 5;
+
+            return !(
+                rect1.top > rect2.bottom - overlapThreshold ||
+                rect1.right < rect2.left + overlapThreshold ||
+                rect1.bottom < rect2.top + overlapThreshold ||
+                rect1.left > rect2.right - overlapThreshold
+            );
+        }
+
+        // --- Collision Detection ---
+        function checkCollisions() {
+            const spaceship = document.getElementById('spaceship');
+
+            // Check for collision with viruses
+            for (let i = viruses.length - 1; i >= 0; i--) {
+                if (isColliding(spaceship, viruses[i].element)) {
+                    lives--;
+                    updateHUD();
+                    
+                    // If hit by a fragment, destroy it
+                    if (viruses[i].isFragment) {
+                        gameContainer.removeChild(viruses[i].element);
+                        viruses.splice(i, 1);
+                    } else {
+                        destroyVirus(i);
+                    }
+
+                    if (lives <= 0) {
+                        gameOver();
+                        return;
+                    }
+                }
+            }
+        }
+
+        // --- Game Loop ---
+        let powerUp = {
+            x: Math.random() * (window.innerWidth - 32), // Random x position
+            y: 0, // Start at the top
+            active: false,
+        };
+
+        const powerUpSpawnInterval = 45000; // 45 seconds spawn interval
+
+        function spawnPowerUp() {
+            if (!powerUp.active) {
+                powerUp.active = true;
+                powerUp.x = Math.random() * (window.innerWidth - 32); // Randomize x position
+                powerUp.y = 0; // Reset y position to the top
+            }
+        }
+
+        function drawPowerUp() {
+            if (powerUp.active) {
+                powerUpImage.style.left = `${powerUp.x}px`;
+                powerUpImage.style.top = `${powerUp.y}px`;
+                powerUp.y += 2; // Move down slower (2 pixels per frame)
+                if (powerUp.y > window.innerHeight) {
+                    powerUp.active = false; // Deactivate if it goes off screen
+                }
+            }
+        }
+
+        function checkPowerUpCollision() {
+            if (powerUp.active) {
+                // Assuming you have a function to check if a shot hits the power-up
+                const playerShots = document.querySelectorAll('.laser');
+                playerShots.forEach(shot => {
+                    if (isColliding(shot, powerUpImage)) {
+                        powerUp.active = false; // Deactivate the power-up
+                        // Optionally, increase score or trigger effects here
+                        score += 50;
+                        updateHUD();
+                        weaponCooldown = 70; // Set cooldown to 70ms
+
+                        // Reset cooldown after 6 seconds
+                        setTimeout(() => {
+                            weaponCooldown = originalWeaponCooldown; // Revert to original cooldown
+                        }, 6000); // 6 seconds
+                    }
+                });
+            }
+        }
+
+        function gameLoop() {
+            if (isShooting) {
+                shoot(); // Call shoot function continuously
+            }
+            if (!isGameOver) {
+                const spaceship = document.getElementById('spaceship');
+                const gameContainer = document.getElementById('game-container');
+                const containerHeight = gameContainer.offsetHeight;
+
+                // Check if score has reached 2000 to adjust spawn interval
+                if (score >= 2000 && score < 3000 && virusSpawnInterval !== 4000) {
+                    clearInterval(virusSpawnTimer);
+                    virusSpawnInterval = 4000; // Change to 2000 ms
+                    virusSpawnTimer = setInterval(spawnVirus, virusSpawnInterval);
+                } else if (score >= 3000 && score < 4000 && virusSpawnInterval !== 3000) {
+                    clearInterval(virusSpawnTimer);
+                    virusSpawnInterval = 3000; // Adjusted spawn interval
+                    virusSpawnTimer = setInterval(spawnVirus, virusSpawnInterval);
+                } else if (score >= 4000 && score < 5000 && virusSpawnInterval !== 2000) {
+                    clearInterval(virusSpawnTimer);
+                    virusSpawnInterval = 2000; // Adjusted spawn interval
+                    virusSpawnTimer = setInterval(spawnVirus, virusSpawnInterval);
+                } else if (score >= 5000 && score <6000 && virusSpawnInterval !== 1500) {
+                    clearInterval(virusSpawnTimer);
+                    virusSpawnInterval = 1500; // Adjusted spawn interval
+                    virusSpawnTimer = setInterval(spawnVirus, virusSpawnInterval);
+                } else if (score >= 6000 && score <20000 && virusSpawnInterval !== 1000) {
+                    clearInterval(virusSpawnTimer);
+                    virusSpawnInterval = 1000; // Adjusted spawn interval
+                    virusSpawnTimer = setInterval(spawnVirus, virusSpawnInterval);
+                }
+
+                // Calculate movement based on current speed and direction
+                let moveX = currentMovement.x * movementConfig[gameSpeed].baseSpeed;
+                let moveY = currentMovement.y * movementConfig[gameSpeed].baseSpeed;
+
+                // Get current position
+                let currentLeft = parseFloat(spaceship.style.left || '50%');
+                let currentTop = parseFloat(spaceship.style.top || '50%');
+
+                // Calculate new position with boundary checks
+                let newLeft = Math.max(0, Math.min(gameContainer.clientWidth - spaceship.clientWidth, currentLeft + moveX));
+                let newTop = Math.max(0, Math.min(gameContainer.clientHeight - spaceship.clientHeight, currentTop + moveY));
+
+                // Update spaceship position
+                spaceship.style.left = `${newLeft}px`;
+                spaceship.style.top = `${newTop}px`;
+
+                const spaceshipRect = spaceship.getBoundingClientRect();
+                console.log('Spaceship Rect:', spaceshipRect);
+                for (let i = 0; i < viruses.length; i++) {
+                    const virusRect = viruses[i].element.getBoundingClientRect();
+                    console.log('Virus Rect:', virusRect);
+                }
+
+                // Move and manage viruses
+                for (let i = viruses.length - 1; i >= 0; i--) {
+                    const virus = viruses[i];
+                    
+                    // Update virus position with controlled movement
+                    if (virus.isFragment) {
+                        // Calculate new position
+                        let newX = virus.x + virus.speedX;
+                        
+                        // Keep fragments within screen bounds horizontally
+                        if (newX < 0 || newX > gameContainer.offsetWidth - 16) {
+                            virus.speedX = -virus.speedX; // Reverse horizontal direction
+                            newX = virus.x + virus.speedX; // Recalculate with new direction
+                        }
+                        
+                        virus.x = newX;
+                        virus.y += virus.speedY;
+                        virus.rotation += virus.rotationSpeed * virus.direction;
+                        virus.element.style.transform = `rotate(${virus.rotation}deg)`;
+                    } else {
+                        // Keep regular viruses within screen bounds horizontally
+                        if (virus.x < 0) {
+                            virus.x = 0;
+                        } else if (virus.x > gameContainer.offsetWidth - virus.size) {
+                            virus.x = gameContainer.offsetWidth - virus.size;
+                        }
+                        virus.y += virus.speed;
+                    }
+                    
+                    virus.element.style.left = `${virus.x}px`;
+                    virus.element.style.top = `${virus.y}px`;
+
+                    // Check if virus hit bottom
+                    if (virus.y > containerHeight) {
+                        if (virus.isFragment) {
+                            if (virus.type === 'ateljee') {
+                                afsprakennotasCount += 0.5;
+                                totalCount += 0.5;
+                            } else if (virus.type === 'stadskantoor') {
+                                meldingenCount += 0.5;
+                                totalCount += 0.5;
+                            } else {
+                                inmengingenCount += 0.5;
+                                totalCount += 0.5;
+                            }
+                        } else {
+                            if (virus.type === 'ateljee') {
+                                afsprakennotasCount += 1;
+                                totalCount += 1;
+                            } else if (virus.type === 'stadskantoor') {
+                                meldingenCount += 1;
+                                totalCount += 1;
+                            } else {
+                                inmengingenCount += 1;
+                                totalCount += 1;
+                            }
+                        }
+
+                        // Check for game over condition
+                        if (totalCount >= 15) {
+                            gameOver();
+                            return;
+                        }
+                        
+                        // Remove the virus
+                        gameContainer.removeChild(virus.element);
+                        viruses.splice(i, 1);
+                        
+                        // Update the HUD
+                        updateHUD();
+                        continue;
+                    }
+                }
+
+                // Tumble functionality
+                let tumblePosition = {
+                    x: Math.random() * 1000,
+                    y: 0,
+                };
+                let tumbleImage = new Image();
+                tumbleImage.src = 'digi48.png';
+                function tumbleDown() {
+                    tumblePosition.y += 50; // Move down by 50 pixels
+                    if (tumblePosition.y > 750) {
+                        tumblePosition.y = 0; // Reset to top if it goes off screen
+                        tumblePosition.x = Math.random() * 1000; // Randomize x position
+                    }
+                    tumbleImage.style.left = `${tumblePosition.x}px`;
+                    tumbleImage.style.top = `${tumblePosition.y}px`;
+                }
+                setInterval(() => {
+                    tumbleDown();
+                }, 10000); // Call tumbleDown every 10 seconds
+
+                spawnPowerUp();
+                drawPowerUp();
+                checkPowerUpCollision();
+
+                // Continue game loop
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // --- Initialize Game on Load ---
+        initializeGame();
+        updateSubsidiestopCounter(); // Update the Subsidiestop counter display
+
+        // Create starry background
+        function createStars() {
+            const starCount = 100; // Number of stars
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                const size = Math.random() * 3 + 1; // Random size for stars
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.animationDuration = `${Math.random() * 1 + 0.5}s`; // Random twinkle speed
+                document.getElementById('game-container').appendChild(star);
+            }
+        }
+    </script>
+</body>
+</html>
