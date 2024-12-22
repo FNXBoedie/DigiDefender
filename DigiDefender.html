@@ -31,6 +31,14 @@
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
             animation: twinkle 1.5s infinite alternate;
+            z-index: -1;
+        }
+
+        .star-container {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: twinkle 1.5s infinite alternate;
         }
 
         @keyframes twinkle {
@@ -350,9 +358,10 @@
             <div id="afsprakennotas-counter">Afsprakennotas: 0</div>
         <div id="inmengingen-counter">Inmengingen: 0</div>
         <div id="meldingen-counter">Meldingen: 0</div>
-        <div id="total-counter">Totaal: 0/15</div>
+        <div id="totaal-counter">Totaal: 0/15</div>
         <div id="subsidiestop-counter">Subsidiestop: 0%</div>
         </div>
+        <div id="sound-toggle" style="position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; background-image: url('Images/speaker-white.png'); background-size: contain; cursor: pointer; z-index: 25;"></div>
         <div id="spaceship">
             <div class="body"></div>
             <div class="wing left"></div>
@@ -362,9 +371,9 @@
 
         <div id="start-screen">
             <h1>Digi Defender</h1>
-            <button id="start-game">Start Game</button>
-            <button id="settings">Instellingen</button>
-            <button id="rules">Spelregels</button>
+            <button id="start-game" style="width: 150px;">Start Game</button>
+            <button id="settings" style="width: 150px;">Instellingen</button>
+            <button id="rules" style="width: 150px;">Spelregels</button>
         </div>
 
         <div id="settings-screen">
@@ -375,8 +384,8 @@
                 <div class="speed-option" data-speed="fast">Snel</div>
             </div>
             <div class="music-selector">
-                <label for="background-music">Background Music:</label>
-                <select id="background-music">
+                <label for="background-music" style="color: #0f0; font-weight: bold;">Background Music:</label>
+                <select id="background-music" style="background-color: #000; color: #0f0; font-weight: bold;">
                     <option value="Audio/8bitarcade.mp3" selected>8-bit arcade</option>
                     <option value="Audio/hardcore.mp3">Speedcore 1996</option>
                     <option value="Audio/christmass.mp3">Merry X-Mas</option>
@@ -385,14 +394,23 @@
             <button id="save-settings">Opslaan</button>
             <button id="back-to-menu">Terug</button>
         </div>
-        <audio id="background-music-player" loop></audio>
+        <audio id="background-music-player" loop autoplay></audio>
+        <script>
+        const audio = document.getElementById('background-music-player');
+        audio.muted = true;
+
+        document.addEventListener('click', () => {
+          audio.muted = false;
+          audio.play();
+        });
+        </script>
 
         <div id="rules-screen">
             <h2>Spelregels</h2>
             <p>Verdedig het Digipunt!</p>
             <p>Wanneer je een Digipunt Power-up raakt, dan kan je voor 6 seconden sneller schieten.</p>
             <p>Voor elke berisping die de bodem bereikt krijg je één deductie. Voor elk fragment een halve deductie.</p>
-            <p>Bij 15 berispingen wordt je Digipunt gesloten.</p>
+            <p>Bij 10 berispingen wordt je Digipunt gesloten.</p>
             <p>Bereikt Stad Gent de overkant? Dan worden alle subsidies ingetrokken en is het Game Over voor iedereen!</p>
            
             <button id="back-to-menu-from-rules">Terug</button>
@@ -402,7 +420,7 @@
             <h1>Helaas!</h1>
             <h1>Je Digipunt wordt gesloten!</h1>
             <p>Jouw Score: <span id="final-score"></span></p>
-            <button id="restart-game">Opnieuw Spelen</button>
+            <button id="restart-game">Refresh Page to Play Again!</button>
         </div>   
         <img id="power-up-image" src="Images/digi48.png" style="position: absolute; width: 48px; height: 48px;">
     </div>
@@ -411,7 +429,7 @@
     <audio id="explosion-sound" src="Audio/explosion.mp3"></audio>
     <audio id="alarm-sound" src="Audio/alarm.mp3"></audio>
     <audio id="bigexplosion-sound" src="Audio/bigexplosion.mp3"></audio>
-    <audio id="loser-sound" src="Audio/loser.mp3"></audio>
+        <audio id="loser-sound" src="Audio/loser.mp3"></audio>
     <script>
         // --- Game Variables ---
         const gameContainer = document.getElementById('game-container');
@@ -421,7 +439,7 @@
         const afsprakennotasElement = document.getElementById('afsprakennotas-counter');
         const inmengingenElement = document.getElementById('inmengingen-counter');
         const meldingenElement = document.getElementById('meldingen-counter');
-        const totalCounterElement = document.getElementById('total-counter');
+        const totalCounterElement = document.getElementById('totaal-counter');
         const subsidiestopElement = document.getElementById('subsidiestop-counter');
         const weaponCooldownBar = document.getElementById('weapon-cooldown');
         const weaponChargeBar = document.getElementById('weapon-charge');
@@ -430,6 +448,29 @@
         const gameOverScreen = document.getElementById('game-over-screen');
         const rulesScreen = document.getElementById('rules-screen');
         const finalScoreElement = document.getElementById('final-score');
+        const soundToggle = document.getElementById('sound-toggle');
+        let soundMuted = false;
+        
+        soundToggle.addEventListener('click', () => {
+            soundMuted = !soundMuted;
+            if (soundMuted) {
+                soundToggle.style.backgroundImage = "url('Images/mute-white.png')";
+            } else {
+                soundToggle.style.backgroundImage = "url('Images/speaker-white.png')";
+            }
+            
+            const laserSound = document.getElementById('laser-sound');
+            const explosionSound = document.getElementById('explosion-sound');
+            const alarmSound = document.getElementById('alarm-sound');
+            const bigExplosionSound = document.getElementById('bigexplosion-sound');
+            const loserSound = document.getElementById('loser-sound');
+            
+            laserSound.muted = soundMuted;
+            explosionSound.muted = soundMuted;
+            alarmSound.muted = soundMuted;
+            bigExplosionSound.muted = soundMuted;
+            loserSound.muted = soundMuted;
+        });
      
         const powerUpImage = document.getElementById('power-up-image');
 
@@ -850,7 +891,7 @@
             const afsprakennotasElement = document.getElementById('afsprakennotas-counter');
             const inmengingenElement = document.getElementById('inmengingen-counter');
             const meldingenElement = document.getElementById('meldingen-counter');
-            const totalCounterElement = document.getElementById('total-counter');
+            const totalCounterElement = document.getElementById('totaal-counter');
             const subsidiestopElement = document.getElementById('subsidiestop-counter');
 
             // Update score and counters
@@ -858,7 +899,7 @@
             afsprakennotasElement.textContent = `Afsprakennotas: ${afsprakennotasCount.toFixed(1)}`;
             inmengingenElement.textContent = `Inmengingen: ${inmengingenCount.toFixed(1)}`;
             meldingenElement.textContent = `Meldingen: ${meldingenCount.toFixed(1)}`;
-            totalCounterElement.textContent = `Total: ${totalCount}/15`;
+            totalCounterElement.textContent = `Totaal: ${totalCount}/10`;
             subsidiestopElement.textContent = `Subsidiestop: ${subsidiestopCounter}%`;
         }
 
@@ -1321,7 +1362,7 @@
                         }
 
                         // Check for game over condition
-                        if (totalCount >= 15) {
+                        if (totalCount >= 10) {
                             gameOver();
                             return;
                         }
@@ -1374,14 +1415,20 @@
             const starCount = 100; // Number of stars
             for (let i = 0; i < starCount; i++) {
                 const star = document.createElement('div');
-                star.classList.add('star');
                 const size = Math.random() * 3 + 1; // Random size for stars
                 star.style.width = `${size}px`;
                 star.style.height = `${size}px`;
                 star.style.top = `${Math.random() * 100}%`;
                 star.style.left = `${Math.random() * 100}%`;
                 star.style.animationDuration = `${Math.random() * 1 + 0.5}s`; // Random twinkle speed
-                document.getElementById('game-container').appendChild(star);
+                
+                const bodyStar = star.cloneNode(true);
+                bodyStar.classList.add('star');
+                document.body.appendChild(bodyStar);
+
+                const containerStar = star.cloneNode(true);
+                containerStar.classList.add('star-container');
+                document.getElementById('game-container').appendChild(containerStar);
             }
         }
     </script>
