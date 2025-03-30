@@ -1,0 +1,3110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <!-- Added user-scalable=no for mobile -->
+    <title>DigiDefender v2.0</title>
+    <style>
+
+
+        /* Modern Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%; /* Ensure body takes full height */
+            overflow: hidden; /* Prevent scroll bars */
+            background-color: #000;
+            font-family: 'Orbitron', sans-serif;
+            color: #0f0;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Game Container with Better Visual Effects */
+        #game-container {
+            width: 1200px;
+            height: 750px;
+            position: relative; /* Changed to relative for absolute positioning of children */
+            border: 4px solid #0f0;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.6), inset 0 0 20px rgba(0, 100, 0, 0.5); /* Added inset shadow */
+            overflow: hidden;
+            background-color: rgba(0, 0, 20, 0.9);
+            border-radius: 8px;
+            transition: transform 0.1s ease; /* For screen shake */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            #game-container {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+                border: none; /* Remove border on full screen */
+            }
+        }
+
+        /* Improved Star Effects (using starfield now) */
+        /* .star { ... } - Removed as starfield provides background */
+
+        /* Improved Spaceship */
+        #spaceship {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            left: 50%;
+            top: 80%; /* Start lower */
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            transition: transform 0.1s ease, filter 0.2s ease; /* Added filter transition */
+        }
+
+
+        #spaceship .body {
+            position: absolute;
+            width: 30px;
+            height: 50px;
+            background: linear-gradient(to bottom, #e8e8e8, #c0c0c0);
+            border-radius: 50% 50% 20% 20%;
+            top: 10px;
+            left: 15px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            border: 1px solid #aaa; /* Subtle border */
+        }
+
+        #spaceship .wing {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 25px solid #a0a0a0;
+            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5)); /* Sharper shadow */
+            transition: transform 0.1s ease;
+        }
+
+        #spaceship .wing.left {
+            left: 0;
+            top: 25px;
+            transform: rotate(-15deg);
+        }
+
+        #spaceship .wing.right {
+            right: 0;
+            top: 25px;
+            transform: rotate(15deg);
+        }
+
+        #spaceship .propellant {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background: linear-gradient(to bottom, #ff9800, #ff5500);
+            border-radius: 50%;
+            bottom: -5px; /* Adjusted position */
+            left: 26px;
+            animation: flicker 0.15s infinite alternate;
+            box-shadow: 0 0 15px rgba(255, 150, 0, 0.8);
+            transition: height 0.1s ease, bottom 0.1s ease, width 0.1s ease, background 0.1s ease; /* Added transitions */
+        }
+
+        #spaceship .propellant.moving {
+            height: 25px;
+            bottom: -10px; /* Adjusted */
+            background: linear-gradient(to bottom, #ffb74d, #ff7043);
+            animation-duration: 0.1s;
+        }
+
+        #spaceship .propellant.fast {
+            height: 35px;
+            bottom: -15px; /* Adjusted */
+            width: 10px;
+            left: 25px; /* Center wider flame */
+            background: linear-gradient(to bottom, #ffcc80, #ff8a65);
+            animation-duration: 0.07s;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.8; transform: scaleY(1.0); }
+            50% { opacity: 1; transform: scaleY(1.1); }
+            100% { opacity: 0.9; transform: scaleY(0.95); }
+        }
+
+        /* Enhanced Laser Effects */
+        .laser {
+            position: absolute;
+            width: 5px; /* Slightly thicker */
+            height: 25px;
+            background: linear-gradient(to bottom, #fff, #0f0, #afa);
+            border-radius: 3px;
+            box-shadow: 0 0 12px #0f0, 0 0 18px #0f0, 0 0 5px #fff; /* More pronounced glow */
+            z-index: 5;
+            /* Removed pulse animation - can be distracting */
+        }
+
+        /* Hit flash effect */
+        .laser-hit-flash {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, rgba(0, 255, 0, 0.8) 0%, rgba(0, 255, 0, 0) 70%);
+            border-radius: 50%;
+            z-index: 6;
+            pointer-events: none;
+            animation: flashFade 0.2s ease-out forwards;
+        }
+
+        @keyframes flashFade {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.5); opacity: 0; }
+        }
+
+
+        /* Modernized Virus Styling */
+        .virus {
+            position: absolute;
+            width: 48px; /* Default size */
+            height: 48px; /* Default size */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: drop-shadow(0 0 8px rgba(255, 50, 50, 0.7)); /* Enhanced shadow */
+            transition: transform 0.3s ease, filter 0.2s ease;
+        }
+        /* Add slight bobbing animation */
+         @keyframes virusBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        .virus { animation: virusBob 2s infinite ease-in-out; }
+
+
+        .virus.d0 { background-image: url('Images/d0948.png'); width: 96px; height: 96px; filter: drop-shadow(0 0 15px rgba(80, 128, 247, 0.796)); }
+        .virus.ateljee { background-image: url('Images/ateljee48.png'); filter: drop-shadow(0 0 15px rgb(255, 134, 13)); }
+        .virus.stadskantoor { background-image: url('Images/stadskantoor.png'); filter: drop-shadow(0 0 12px rgba(255, 50, 50, 0.9)); }
+
+        /* ** NEW ** CSS rule for the boss minions */
+        .virus.stadgent_minion {
+            background-image: url('Images/stadgent128.png');
+            width: 72px; /* Standard virus size */
+            height: 72px; /* Standard virus size */
+            background-size: contain; /* Ensure boss image scales down */
+            filter: drop-shadow(0 0 8px rgba(255, 50, 50, 0.7)); /* Optional shadow */
+            /* Inherits bobbing animation from .virus */
+        }
+
+        /* Virus hit flash */
+        .virus.hit {
+             filter: brightness(2.5) drop-shadow(0 0 15px #fff);
+        }
+
+
+        /* Enhanced Virus Fragments with Animation */
+        .virus-fragment {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: drop-shadow(0 0 5px rgba(255, 100, 100, 0.5));
+            transition: all 0.4s ease-out; /* Existing transition */
+            animation: spin 3s infinite linear; /* Existing spin */
+            z-index: 4;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg) scale(1); }
+            to { transform: rotate(360deg) scale(1); }
+        }
+
+        /* Specific fragment styles */
+        .virus-fragment.d0 { background-image: url('Images/d0948.png'); width: 48px; height: 48px; }
+        .virus-fragment.ateljee { background-image: url('Images/ateljee16.png'); width: 24px; height: 24px; } /* Made smaller */
+        .virus-fragment.stadskantoor { background-image: url('Images/stadskantoor.png'); width: 32px; height: 32px; }
+        /* No specific fragment style for stadgent_minion needed as they don't spawn fragments */
+
+
+        /* fragment fade out */
+        .virus-fragment.fading {
+             opacity: 0;
+             transform: scale(0.5);
+             transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+
+        /* Improved HUD with Modern UI */
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: #0f0;
+            z-index: 20;
+            font-size: 12px; /* Slightly smaller base */
+            text-shadow: 0 0 5px #0f0;
+            background-color: rgba(0, 20, 0, 0.75);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 0, 0.4);
+            backdrop-filter: blur(4px);
+            min-width: 180px;
+        }
+
+        #score {
+            margin-bottom: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        #afsprakennotas-counter,
+        #inmengingen-counter,
+        #meldingen-counter,
+        #totaal-counter,
+        #subsidiestop-counter {
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px; /* Smaller details */
+        }
+        #totaal-counter span:last-child,
+        #subsidiestop-counter span:last-child { font-weight: bold; color: #ffcc00; } /* Highlight totals */
+
+
+        /* Progress Bar Styles */
+        #weapon-cooldown {
+            width: 100%;
+            height: 6px; /* Slimmer */
+            background-color: rgba(50, 50, 50, 0.8);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        #weapon-charge {
+            height: 100%;
+            background: linear-gradient(to right, #0f0, #0ff);
+            border-radius: 3px;
+            transition: width 0.05s linear; /* Faster transition for responsiveness */
+            box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Game Screens with Modern UI & Transitions */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(0, 40, 0, 0.92), rgba(0, 0, 20, 0.98));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            color: #0f0;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            opacity: 0; /* Start hidden */
+            visibility: hidden; /* Start hidden */
+            transition: opacity 0.5s ease-in-out, visibility 0s linear 0.5s; /* Fade transition */
+        }
+         .screen.active {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s ease-in-out, visibility 0s linear 0s;
+        }
+
+
+        #start-screen h1 {
+            font-size: 52px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 20px #0f0, 0 0 30px #0f0; /* Stronger shadow */
+            letter-spacing: 5px;
+            font-weight: 700;
+        }
+         #start-screen h4 { /* Style for subtitle */
+             font-size: 18px;
+             margin-top: -30px; /* Adjust spacing */
+             margin-bottom: 30px;
+             color: #afa;
+             font-weight: normal;
+             letter-spacing: 2px;
+             text-shadow: 0 0 5px #0f0;
+         }
+
+        button {
+            background-color: rgba(0, 30, 0, 0.7);
+            color: #0f0;
+            border: 2px solid #0f0;
+            padding: 12px 28px; /* Slightly more padding */
+            margin: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3), inset 0 0 5px rgba(0, 255, 0, 0.2);
+            min-width: 200px; /* Wider buttons */
+            position: relative; /* For ::after */
+            overflow: hidden; /* For ::after */
+            text-transform: uppercase; /* Uppercase text */
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background-color: rgba(0, 80, 0, 0.8);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.7), inset 0 0 8px rgba(0, 255, 0, 0.3);
+            transform: translateY(-2px); /* Slight lift */
+            color: #fff; /* Brighter text on hover */
+            border-color: #5f5; /* Brighter border */
+        }
+
+        button:active {
+            transform: translateY(0px); /* Press down */
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+         /* Button Shine Effect */
+         button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -150%; /* Start further left */
+            width: 50%; /* Narrower shine */
+            height: 200%;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+            transform: skewX(-30deg); /* Steeper angle */
+            transition: left 0.6s ease; /* Slower transition */
+        }
+
+        button:hover::after {
+            left: 150%; /* Move across the button */
+        }
+
+        #settings-screen {
+            gap: 20px; /* Reduced gap */
+            padding: 30px;
+        }
+
+        #settings-screen h2, #rules-screen h2, #leaderboard-screen h2 { /* Consistent heading */
+            font-size: 36px;
+            margin-bottom: 25px;
+            text-shadow: 0 0 15px #0f0;
+            font-weight: 700;
+        }
+
+        .setting-group {
+             background: rgba(0, 15, 0, 0.6);
+             padding: 15px 20px;
+             border-radius: 8px;
+             border: 1px solid rgba(0, 255, 0, 0.2);
+             margin-bottom: 15px;
+             width: 80%;
+             max-width: 400px;
+        }
+        .setting-group h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #afa;
+        }
+
+
+        .speed-selector {
+            margin: 10px 0;
+            display: flex;
+            justify-content: center; /* Center options */
+            gap: 15px;
+        }
+
+        .speed-option {
+            padding: 8px 15px;
+            border: 1px solid #0f0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        .speed-option:hover {
+            background: rgba(0, 80, 0, 0.5);
+            color: #fff;
+        }
+        .speed-option.selected {
+            background: #0f0;
+            color: #000;
+            font-weight: bold;
+            box-shadow: 0 0 10px #0f0;
+            border-color: #fff;
+        }
+
+
+        .music-selector label {
+             display: block; /* Block level label */
+             margin-bottom: 10px;
+             font-size: 18px;
+             text-align: center;
+             color: #afa;
+        }
+
+        .music-selector select {
+            background-color: rgba(0, 30, 0, 0.8); /* Darker background */
+            color: #0f0;
+            padding: 10px 15px;
+            border: 1px solid #0f0; /* Thinner border */
+            border-radius: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+            width: 100%; /* Full width within group */
+            text-align: center;
+            cursor: pointer;
+        }
+         .music-selector select:focus { outline: 2px solid #0ff; }
+
+
+        /* Power-up Animation */
+        #power-up-image {
+             position: absolute; /* Already set */
+             width: 48px;
+             height: 48px;
+             display: none; /* Start hidden */
+            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.8));
+            animation: float 2s infinite alternate ease-in-out, powerUpGlow 1.5s infinite;
+            z-index: 8; /* Above most things */
+        }
+
+        @keyframes float {
+            from { transform: translateY(0) rotate(-5deg); }
+            to { transform: translateY(-12px) rotate(5deg); }
+        }
+        @keyframes powerUpGlow {
+             0% { filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6)); }
+             50% { filter: drop-shadow(0 0 25px rgba(0, 255, 255, 1.0)); }
+             100% { filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6)); }
+         }
+
+        /* Powerup collected effect */
+        .powerup-collect-effect {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 3px solid #0ff;
+            border-radius: 50%;
+            z-index: 25;
+            pointer-events: none;
+            animation: collectZoom 0.5s ease-out forwards;
+        }
+
+        @keyframes collectZoom {
+             from { transform: scale(1); opacity: 0.8; }
+             to { transform: scale(4); opacity: 0; }
+         }
+
+        /* Boss Styles */
+        #boss-image {
+             position: absolute; /* Already set */
+             width: 128px;
+             height: 128px;
+             display: none; /* Start hidden */
+            filter: drop-shadow(0 0 25px rgba(255, 50, 50, 0.9));
+            animation: bossFloat 3s infinite alternate ease-in-out;
+            transition: transform 0.3s ease, filter 0.2s ease;
+            z-index: 9;
+        }
+         #boss-image.hit {
+             filter: brightness(2.5) drop-shadow(0 0 30px #fff);
+             transform: scale(1.02); /* Slight bulge on hit */
+         }
+
+
+        .boss-health-container {
+            position: absolute; /* Needs JS positioning */
+            width: 128px;
+            padding: 2px; /* Thinner padding */
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid #f00; /* Thinner border */
+            border-radius: 4px;
+            z-index: 9;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
+            overflow: hidden;
+        }
+
+        .boss-health-bar {
+            height: 8px; /* Slimmer */
+            background: linear-gradient(to right, #f00, #ff5722);
+            border-radius: 2px;
+            transition: width 0.3s ease-out; /* Smoother transition */
+            position: relative; /* For shine */
+            overflow: hidden; /* For shine */
+        }
+         /* Health Bar Shine */
+         .boss-health-bar::after {
+             content: '';
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 100%;
+             height: 100%;
+             background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+             animation: healthBarShine 1.5s infinite linear;
+         }
+         @keyframes healthBarShine {
+             0% { transform: translateX(-100%); }
+             100% { transform: translateX(100%); }
+         }
+
+
+        @keyframes bossFloat {
+            from { transform: translateY(0) rotate(-2deg) scale(1); }
+            to { transform: translateY(-15px) rotate(2deg) scale(1.02); }
+        }
+
+        /* Sound Control */
+        #sound-toggle {
+            position: absolute;
+            top: 15px; /* Consistent with HUD */
+            right: 15px;
+            width: 36px; /* Slightly smaller */
+            height: 36px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            cursor: pointer;
+            z-index: 25;
+            transition: transform 0.2s ease, filter 0.2s ease;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7));
+            border-radius: 50%;
+            background-color: rgba(0, 30, 0, 0.5);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        #sound-toggle:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+            background-color: rgba(0, 80, 0, 0.6);
+        }
+
+        /* Game Over Screen */
+        #game-over-screen h1 {
+            font-size: 48px; /* Larger */
+            margin-bottom: 15px;
+            color: #f55;
+            text-shadow: 0 0 15px #f00, 0 0 25px #f00;
+            font-weight: 700;
+        }
+         #game-over-screen h2 { /* Subtitle */
+             font-size: 24px;
+             margin-bottom: 25px;
+             color: #faa;
+             font-weight: normal;
+         }
+
+        #final-score-label {
+             font-size: 18px;
+             color: #ccc;
+             margin-bottom: 5px;
+         }
+        #final-score {
+            font-size: 54px; /* Larger score */
+            color: #0f0;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(0, 255, 0, 0.8), 0 0 30px rgba(0, 255, 0, 0.5);
+            font-weight: 700;
+        }
+
+        /* Rules Screen */
+        #rules-screen { padding: 40px; }
+        #rules-screen .rules-content {
+             background: rgba(0, 15, 0, 0.6);
+             padding: 25px;
+             border-radius: 8px;
+             border: 1px solid rgba(0, 255, 0, 0.2);
+             max-width: 650px;
+             text-align: left;
+        }
+        #rules-screen p {
+            margin: 12px 0;
+            font-size: 16px; /* Slightly smaller for more content */
+            line-height: 1.6;
+        }
+        #rules-screen p strong { color: #afa; } /* Highlight key terms */
+
+
+        /* Leaderboard Screen Specifics */
+        #leaderboard-screen .leaderboard-content {
+             background: rgba(0, 15, 0, 0.6);
+             padding: 20px 25px;
+             border-radius: 8px;
+             border: 1px solid rgba(0, 255, 0, 0.2);
+             width: 80%;
+             max-width: 450px;
+             max-height: 60vh; /* Limit height */
+             overflow-y: auto; /* Add scroll if needed */
+        }
+        #leaderboard-screen table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        #leaderboard-screen th {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 2px solid #0f0;
+            color: #afa;
+            font-size: 16px;
+        }
+        #leaderboard-screen td {
+            padding: 8px;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+        }
+        #leaderboard-screen td:nth-child(1) { width: 15%; text-align: center; } /* Rank */
+        #leaderboard-screen td:nth-child(2) { width: 45%; font-weight: bold; } /* Score */
+        #leaderboard-screen td:nth-child(3) { width: 40%; text-align: right; color: #ccc; font-size: 12px;} /* Date */
+        #leaderboard-screen .no-scores { text-align: center; padding: 20px; color: #ccc; }
+
+
+        /* Pause Screen */
+        #pause-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 20, 0.85);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 50; color: #0f0;
+            backdrop-filter: blur(5px);
+            /* display: none; /* Added via JS */
+        }
+        #pause-screen h2 { font-size: 42px; margin-bottom: 20px; text-shadow: 0 0 15px #0f0; }
+        #pause-screen p { margin-bottom: 30px; color: #ccc; }
+        #pause-screen button { margin: 10px; }
+        #exit-to-menu-btn { /* Special style for exit button in pause menu */
+            color: #f55;
+            border-color: #f55;
+            background-color: rgba(30, 0, 0, 0.7);
+            box-shadow: 0 0 10px rgba(255, 85, 85, 0.3), inset 0 0 5px rgba(255, 85, 85, 0.2);
+        }
+        #exit-to-menu-btn:hover {
+             color: #fff;
+             border-color: #f88;
+             background-color: rgba(80, 0, 0, 0.8);
+             box-shadow: 0 0 20px rgba(255, 85, 85, 0.7), inset 0 0 8px rgba(255, 85, 85, 0.3);
+        }
+
+
+        /* Enhanced Space Background */
+        @keyframes starfieldAnim {
+            0% { background-position-y: 0px; } /* Corrected property */
+            100% { background-position-y: -750px; } /* Corrected property */
+        }
+
+        .starfield {
+            position: absolute;
+            top: 0; /* Start at top */
+            left: 0;
+            width: 100%;
+            height: 100%; /* Single height for background-position animation */
+            background-image:
+                radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 80px 80px, #fff, rgba(0,0,0,0)), /* More varied stars */
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 90px 40px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 130px 150px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 180px 50px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.4; /* Slightly more visible */
+            z-index: -5;
+            animation: starfieldAnim 40s linear infinite; /* Slower scroll */
+
+        }
+
+
+        /* Explosion Effects */
+        @keyframes explosion {
+            0% { transform: scale(0.1); opacity: 1; filter: brightness(3); }
+            70% { transform: scale(1.5); opacity: 0.7; filter: brightness(1.5); }
+            100% { transform: scale(2.2); opacity: 0; filter: brightness(1); }
+        }
+
+        .explosion-particle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,220,150,1) 0%, rgba(255,120,50,0.8) 60%, rgba(255,50,0,0) 100%);
+            box-shadow: 0 0 15px rgba(255, 150, 50, 0.8);
+            z-index: 7;
+            pointer-events: none;
+            /* Animation applied via JS */
+        }
+
+         /* Mobile Controls Styling */
+        #mobile-controls {
+            display: none; /* Hidden by default, shown via JS */
+            position: absolute;
+            bottom: 0; /* Stick to bottom */
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            z-index: 30;
+            user-select: none; /* Prevent text selection */
+            -webkit-user-select: none;
+        }
+        .mobile-controls-row {
+             display: flex;
+             justify-content: space-between;
+             align-items: center; /* Align items vertically */
+             margin-bottom: 10px;
+        }
+        .mobile-button {
+            width: 70px; height: 70px;
+            background: rgba(0, 255, 0, 0.15);
+            border: 2px solid rgba(0, 255, 0, 0.4);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+            opacity: 0.7; /* Slightly transparent */
+            transition: background-color 0.1s ease, transform 0.1s ease;
+        }
+         .mobile-button:active {
+             background: rgba(0, 255, 0, 0.3);
+             transform: scale(0.95);
+         }
+
+        #mobile-fire {
+            width: 90px; height: 90px; /* Larger fire button */
+            background: rgba(255, 0, 0, 0.15);
+            border-color: rgba(255, 0, 0, 0.5);
+            color: #f55;
+            font-size: 18px; /* Text instead of symbol */
+            font-weight: bold;
+            text-shadow: 0 0 5px #f00;
+        }
+         #mobile-fire:active {
+             background: rgba(255, 0, 0, 0.3);
+         }
+        .mobile-joystick {
+             flex-grow: 1; /* Take remaining space */
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             gap: 10px; /* Space between up/down */
+        }
+         /* Center Up/Down buttons */
+        .mobile-controls-row:last-child {
+            justify-content: center; /* Center the joystick part */
+        }
+
+
+        /* Loading Screen */
+        #loading-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            display: flex; flex-direction: column; /* Allow text above bar */
+            justify-content: center; align-items: center;
+            z-index: 100;
+            color: #0f0;
+            opacity: 1;
+            transition: opacity 0.5s ease-out 0.5s; /* Fade out after delay */
+        }
+         #loading-screen h2 { margin-bottom: 20px; font-size: 24px; }
+        .loading-bar-container {
+            width: 300px; height: 20px;
+            background: rgba(0, 50, 0, 0.5);
+            border: 2px solid #0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        #loading-bar {
+            width: 0%; height: 100%;
+            background: linear-gradient(to right, #0f0, #0ff);
+            transition: width 1.5s ease-out; /* Faster loading bar fill */
+            box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+         #loading-screen.hidden {
+             opacity: 0;
+             pointer-events: none; /* Disable interaction after fade */
+         }
+
+        /* Add Font Import */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div class="starfield"></div>
+
+
+        <!-- Screen transition element removed - handled by screen opacity now -->
+
+        <!-- HUD Display -->
+        <div id="hud">
+            <div id="score">Score: 0</div>
+            <div id="counters"> <!-- Group counters -->
+                <div id="afsprakennotas-counter"><span>Afsprakennotas:</span><span>0</span></div>
+                <div id="inmengingen-counter"><span>Inmengingen:</span><span>0</span></div>
+                <div id="meldingen-counter"><span>Meldingen:</span><span>0</span></div>
+                <hr style="border-color: rgba(0, 255, 0, 0.2); margin: 4px 0;">
+                <div id="totaal-counter"><span>Totaal Klachten:</span><span>0/10</span></div>
+                <div id="subsidiestop-counter"><span>Subsidiestop:</span><span>0%</span></div>
+            </div>
+            <div id="weapon-cooldown">
+                <div id="weapon-charge" style="width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Sound Toggle Button -->
+        <div id="sound-toggle" style="background-image: url('Images/speakeron.png');"></div>
+
+        <!-- Player Spaceship -->
+        <div id="spaceship">
+            <div class="body"></div>
+            <div class="wing left"></div>
+            <div class="wing right"></div>
+            <div class="propellant"></div>
+        </div>
+
+        <!-- Boss Elements (added dynamically) -->
+        <!-- <img id="boss-image" src="Images/stadgent128.png" ... > -->
+        <!-- <div class="boss-health-container"> ... </div> -->
+
+         <!-- Power-Up Image -->
+         <img id="power-up-image" src="Images/digi48.png">
+
+
+        <!-- Screens -->
+        <div id="start-screen" class="screen active"> <!-- Start active -->
+            <h1>DigiDefender</h1>
+            <h4>by FNX</h4>
+            <br>
+            <br>
+            <button id="start-game">Start Game</button>
+            <button id="settings">Instellingen</button>
+            <button id="rules">Spelregels</button>
+            <button id="leaderboard">Leaderboard</button>
+        </div>
+
+        <div id="settings-screen" class="screen">
+            <h2>Instellingen</h2>
+            <div class="setting-group">
+                <h3>Rakket Snelheid</h3>
+                <div class="speed-selector">
+                    <div class="speed-option" data-speed="slow">Traag</div>
+                    <div class="speed-option selected" data-speed="normal">Normaal</div>
+                    <div class="speed-option" data-speed="fast">Snel</div>
+                </div>
+            </div>
+            <div class="setting-group music-selector">
+                 <label for="background-music">Achtergrondmuziek</label>
+                <select id="background-music">
+                    <option value="Audio/8bitarcade.mp3" selected>FNX - DigiDefender Theme (8-bit Arcade)</option>
+                    <option value="Audio/hardcore.mp3">The Destroyer - Arcade X-Perience (Speedcore 1996)</option>
+                    <option value="Audio/elysium.mp3">FNX - Elysium (House)</option>
+                    <option value="Audio/kbounce.mp3">FNX - Hongdae Bounce (K-Pop / Future Bounce)</option>
+                    <option value="Audio/ontheroad.mp3">Abel - Onderweg (FNX Nillies Punk Flip)</option>
+                    <option value="Audio/talkinboutloveanthem.mp3">Van Halen - Ain't Talkin' Bout Love (FNX 80s Anthem Flip)</option>
+                    <option value="Audio/vielleichtvielleicht.mp3">MilleniumKid & JBS - Vielleicht Vielleicht (FNX Metal Flip)</option>
+                    <!-- ** NEW "Play All" Option ** -->
+                    <option value="all">Alles afspelen</option>
+                </select>
+            </div>
+            <div>
+                <button id="save-settings">Opslaan</button>
+                <button id="back-to-menu">Terug</button>
+            </div>
+        </div>
+
+        <div id="rules-screen" class="screen">
+            <h2>Spelregels</h2>
+            <div class="rules-content">
+                <p>Verdedig het <strong>Digipunt</strong> tegen alle aanvallen!</p>
+                <p>Gebruik <strong>Pijltjestoetsen</strong> of <strong>ZQSD</strong> om te bewegen.</p>
+                <p>Gebruik <strong>ESC</strong> om het spel te pauzeren.</p>
+                <p>Gebruik <strong>Spatiebalk</strong> om te schieten.</p>
+                <p>Pak een <strong>Digipunt Power-up</strong> ( <img src="Images/digi48.png" style="width:20px; height:20px; vertical-align: middle;"> ) voor <strong>6 seconden</strong> sneller vuren.</p>
+                <p>Raak <strong>Instanties</strong> ( <img src="Images/d0948.png" style="width:20px; height:20px; vertical-align: middle;"> ) om ze te vernietigen. <br> Elke vernietigde <strong>Instantie</strong> ontploft in verschillende <strong>Controleurs</strong>  die zich verspreiden.</p>
+                <p>Elke <strong>Instantie</strong> die je rakket raakt of  de bodem bereikt, geeft: <strong>1 klacht</strong>. <br> Elke <strong>Controleur</strong> die je rakket raakt geeft een waarschuwing: <strong>0.5 klacht</strong>.</p>
+                <p>Bij <strong>10 totale klachten</strong> wordt je Digipunt gesloten (Game Over).</p>
+                <p>Let op de <strong>Stad Gent</strong> baas ( <img src="Images/stadgent128.png" style="width:20px; height:20px; vertical-align: middle;"> )! De baas stuurt <strong>Inspecteurs</strong> ( <img src="Images/stadgent128.png" style="width:20px; height:20px; vertical-align: middle;"> ) die elk 12.5% van de subsidies terugtrekken bij impact. Zodra de <strong>Subsidiestop</strong> 100% bereikt, wordt iedereen ontslagen (Game Over)!</p>
+            </div>
+            <button id="back-to-menu-from-rules">Terug naar Menu</button>
+        </div>
+
+        <div id="game-over-screen" class="screen">
+            <h1>Game Over!</h1>
+            <h2>Je Digipunt wordt gesloten!</h2>
+            <p id="final-score-label">Jouw Score:</p>
+            <div id="final-score">0</div>
+            <button id="restart-game">Opnieuw Spelen</button>
+            <button id="view-high-scores">View High Scores</button>
+            <button id="exit-to-menu-from-go">Exit to Menu</button> <!-- Added Exit Button -->
+        </div>
+
+         <div id="leaderboard-screen" class="screen">
+             <h2>High Scores</h2>
+             <div class="leaderboard-content">
+                 <!-- Table generated by JS -->
+             </div>
+             <button id="back-from-leaderboard">Back to Menu</button>
+         </div>
+
+
+         <!-- Mobile Touch Controls -->
+        <div id="mobile-controls">
+            <div class="mobile-controls-row">
+                <div id="mobile-left" class="mobile-button">◀</div>
+                <div id="mobile-fire" class="mobile-button">FIRE</div>
+                <div id="mobile-right" class="mobile-button">▶</div>
+            </div>
+            <div class="mobile-controls-row">
+                 <div style="width: 70px;"></div> <!-- Spacer -->
+                 <div class="mobile-joystick">
+                    <div id="mobile-up" class="mobile-button">▲</div>
+                    <div id="mobile-down" class="mobile-button">▼</div>
+                 </div>
+                 <div style="width: 70px;"></div> <!-- Spacer -->
+            </div>
+        </div>
+
+        <!-- Loading screen -->
+        <div id="loading-screen">
+             <h2>Loading DigiDefender...</h2>
+             <div class="loading-bar-container">
+                <div id="loading-bar"></div>
+            </div>
+        </div>
+
+   </div><!-- closing game-container-->
+
+    <!-- Game Sound Effects -->
+    <audio id="laser-sound" src="Audio/laser.mp3" preload="auto"></audio>
+    <audio id="explosion-sound" src="Audio/explosion.mp3" preload="auto"></audio>
+    <audio id="alarm-sound" src="Audio/alarm.mp3" preload="auto"></audio>
+    <audio id="bigexplosion-sound" src="Audio/bigexplosion.mp3" preload="auto"></audio>
+    <audio id="loser-sound" src="Audio/loser.mp3" preload="auto"></audio>
+    <audio id="powerup-sound" src="Audio/powerup.mp3" preload="auto"></audio>
+    <audio id="hit-sound" src="Audio/hit.mp3" preload="auto"></audio> <!-- Added generic hit sound -->
+
+
+    <!-- Background Music Player -->
+    <audio id="background-music-player" loop></audio>
+
+<script>
+    // --- DOM Elements ---
+    const gameContainer = document.getElementById('game-container');
+    const spaceship = document.getElementById('spaceship');
+    const propellant = spaceship.querySelector('.propellant');
+    const hudScore = document.getElementById('score');
+    const afsprakennotasElement = document.getElementById('afsprakennotas-counter').querySelector('span:last-child');
+    const inmengingenElement = document.getElementById('inmengingen-counter').querySelector('span:last-child');
+    const meldingenElement = document.getElementById('meldingen-counter').querySelector('span:last-child');
+    const totalCounterElement = document.getElementById('totaal-counter').querySelector('span:last-child');
+    const subsidiestopElement = document.getElementById('subsidiestop-counter').querySelector('span:last-child');
+    const weaponCooldownBar = document.getElementById('weapon-cooldown');
+    const weaponChargeBar = document.getElementById('weapon-charge');
+    const soundToggle = document.getElementById('sound-toggle');
+    const powerUpImage = document.getElementById('power-up-image');
+    const backgroundMusicPlayer = document.getElementById('background-music-player');
+    const backgroundMusicSelect = document.getElementById('background-music'); // Specific element for music select
+    const loadingScreen = document.getElementById('loading-screen');
+    const loadingBar = document.getElementById('loading-bar');
+
+
+    // Screens
+    const screens = {
+        start: document.getElementById('start-screen'),
+        settings: document.getElementById('settings-screen'),
+        rules: document.getElementById('rules-screen'),
+        gameOver: document.getElementById('game-over-screen'),
+        leaderboard: document.getElementById('leaderboard-screen'),
+    };
+    const finalScoreElement = document.getElementById('final-score');
+
+    // --- Game Constants ---
+    const GAME_WIDTH = 1200;
+    const GAME_HEIGHT = 750;
+    const SHIP_WIDTH = 60;
+    const SHIP_HEIGHT = 80;
+    const LASER_WIDTH = 5;
+    const LASER_HEIGHT = 25;
+    const LASER_SPEED = 12;
+    const BASE_WEAPON_COOLDOWN = 180; // Slightly slower base cooldown
+    const POWERUP_WEAPON_COOLDOWN = 60; // Faster powerup cooldown
+    const POWERUP_DURATION = 6000; // 6 seconds
+    const POWERUP_SPAWN_INTERVAL = 25000; // 25 seconds
+    const BOSS_SPAWN_SCORE_THRESHOLD = 1000; // Score needed for boss possibility
+    const BOSS_SPAWN_CHECK_INTERVAL = 90000; // Check every 90 seconds after threshold
+    const BOSS_SPAWN_CHANCE = 1.00; // 100% chance per check
+    const MAX_DEDUCTIONS = 10;
+    const STARFIELD_SCROLL_SPEED = 0.3; // Pixels per frame
+    const MUSIC_PREVIEW_DURATION = 20000; // 20 seconds for preview
+
+    const MOVEMENT_CONFIG = {
+        slow: { baseSpeed: 10, acceleration: 0.7, maxSpeed: 9, friction: 0.88 },
+        normal: { baseSpeed: 13, acceleration: 0.8, maxSpeed: 13, friction: 0.9 },
+        fast: { baseSpeed: 18, acceleration: 1.0, maxSpeed: 20, friction: 0.92 }
+    };
+
+    // --- CONFIGURATION SECTION ---
+    // ** UPDATED VIRUS_CONFIG **
+    const VIRUS_CONFIG = {
+        d0: { health: 3, baseSpeed: 1.8, points: 300, width: 96, height: 96, fragmentCount: 5, deduction: 1, subsidyHit: 0, image: 'Images/d0948.png', fragmentImage: 'Images/d0948.png', fragmentWidth: 48, fragmentHeight: 48 },
+        ateljee: { health: 2, baseSpeed: 1.8, points: 200, width: 48, height: 48, fragmentCount: 4, deduction: 1, subsidyHit: 0, image: 'Images/ateljee48.png', fragmentImage: 'Images/ateljee16.png', fragmentWidth: 32, fragmentHeight: 32 },
+        stadskantoor: { health: 2, baseSpeed: 1.5, points: 100, width: 48, height: 48, fragmentCount: 3, deduction: 1, subsidyHit: 0, image: 'Images/stadskantoor.png', fragmentImage: 'Images/stadskantoor.png', fragmentWidth: 32, fragmentHeight: 32 },
+        // ** NEW Boss minion variant using stadgent image **
+        stadgent_minion: { health: 1, baseSpeed: 1.4, points: 50, width: 48, height: 48, fragmentCount: 0, deduction: 0, subsidyHit: 12.5, image: 'Images/stadgent128.png', /* No fragment image needed */ fragmentWidth: 72, fragmentHeight: 72 }
+    };
+
+    // ** BOSS_CONFIG uses stadgent image **
+    const BOSS_CONFIG = {
+        health: 60, // Increased health
+        points: 3000,
+        width: 128,
+        height: 128,
+        attackInterval: 1800, // Slightly faster attacks
+        moveSpeedX: 2.0,
+        image: 'Images/stadgent128.png' // Correct boss image
+    };
+    // --- END CONFIGURATION SECTION ---
+
+
+    // --- Game State Variables ---
+    let score = 0;
+    let afsprakennotasCount = 0;
+    let inmengingenCount = 0;
+    let meldingenCount = 0;
+    let totalCount = 0;
+    let subsidiestopCounter = 0;
+    let isGameOver = false;
+    let isGameRunning = false;
+    let isPaused = false;
+    let canShoot = true;
+    let weaponCooldown = BASE_WEAPON_COOLDOWN;
+    let gameSpeed = 'normal';
+    let soundMuted = false;
+    let lastShootTime = 0;
+    let activeScreen = 'start'; // Track the currently visible screen
+    let gameLoopId = null; // To store requestAnimationFrame ID
+
+    // Music specific state
+    let currentMusicSelection = 'Audio/8bitarcade.mp3'; // Default or loaded from storage
+    let musicTracks = []; // List of playable tracks (src paths)
+    let isPreviewingMusic = false;
+    let previewTimeoutId = null;
+    let isPlayAllActive = false;
+    let playAllIndex = 0;
+
+
+    // Movement state
+    let shipX = 0;
+    let shipY = 0;
+    let shipSpeedX = 0;
+    let shipSpeedY = 0;
+    let moveInput = { x: 0, y: 0 };
+    let isMoving = false;
+    let isShootingInput = false; // Separate from canShoot state
+
+    // Timers (store IDs for clearing)
+    let virusSpawnTimerId = null;
+    let powerUpTimerId = null;
+    let bossSpawnTimerId = null;
+    let weaponRechargeTimeoutId = null;
+    let powerUpEffectTimeoutId = null;
+    let activeTimeouts = new Set(); // Keep track of misc timeouts
+
+    // Game Object Arrays
+    let viruses = [];
+    let lasers = [];
+    let powerUps = []; // Store powerup objects { element, x, y, width, height }
+    let effects = []; // For explosions, flashes etc. { element, cleanupTimer }
+    let bossEnemy = null; // { element, healthBar, healthContainer, x, y, ... }
+
+    // Asset paths for preloading
+    const IMAGE_ASSETS = [
+        'Images/d0948.png', 'Images/ateljee48.png', 'Images/stadskantoor.png',
+        'Images/ateljee16.png', 'Images/digi48.png', 'Images/stadgent128.png', // Ensure stadgent is preloaded
+        'Images/speakeron.png', 'Images/speaker.png' // Corrected speaker image names
+    ];
+    const AUDIO_ASSETS = [
+        'Audio/laser.mp3', 'Audio/explosion.mp3', 'Audio/alarm.mp3',
+        'Audio/bigexplosion.mp3', 'Audio/loser.mp3', 'Audio/powerup.mp3', 'Audio/hit.mp3',
+        'Audio/8bitarcade.mp3', 'Audio/hardcore.mp3', 'Audio/elysium.mp3', 'Audio/kbounce.mp3', 'Audio/ontheroad.mp3', 'Audio/talkinboutloveanthem.mp3', 'Audio/vielleichtvielleicht.mp3'
+    ];
+
+    // --- Initialization ---
+
+    window.addEventListener('load', initializeGame);
+
+    async function initializeGame() {
+        console.log("Initializing Game...");
+        populateMusicTracks(); // ** NEW: Get music tracks early **
+        setupEventListeners();
+        createGridAndStarfield(); // Create static background elements
+        loadSettings(); // Load settings *after* populating tracks
+        setInitialShipPosition();
+        updateHUD();
+
+        // Show loading screen and preload assets
+        loadingBar.style.width = '10%'; // Start loading bar
+        await preloadAssets(); // Wait for assets
+        loadingBar.style.width = '100%';
+
+        // Hide loading screen after a short delay
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait for bar animation
+        loadingScreen.classList.add('hidden');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait for fade out
+
+        // Activate the start screen
+        showScreen('start');
+
+        // Start the animation loop (for background effects even when not playing)
+        gameLoop();
+
+        console.log("Initialization Complete.");
+    }
+
+     // ** NEW: Function to get music track list from dropdown **
+     function populateMusicTracks() {
+         musicTracks = [];
+         const options = backgroundMusicSelect.querySelectorAll('option');
+         options.forEach(option => {
+             if (option.value && option.value !== 'all') { // Exclude the "all" option
+                 musicTracks.push(option.value);
+             }
+         });
+         console.log("Populated music tracks:", musicTracks);
+     }
+
+    function setupEventListeners() {
+        // Keyboard
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+
+        // Buttons
+        document.getElementById('start-game').addEventListener('click', startGame);
+        document.getElementById('settings').addEventListener('click', () => showScreen('settings'));
+        document.getElementById('rules').addEventListener('click', () => showScreen('rules'));
+        document.getElementById('leaderboard').addEventListener('click', showLeaderboard);
+        document.getElementById('save-settings').addEventListener('click', saveSettings);
+        document.getElementById('back-to-menu').addEventListener('click', () => {
+            stopMusicPreview(); // Stop preview when leaving settings
+            showScreen('start');
+        }); // Back from settings
+        document.getElementById('back-to-menu-from-rules').addEventListener('click', () => showScreen('start')); // Back from rules
+        document.getElementById('restart-game').addEventListener('click', startGame); // Restart calls startGame which resets
+        document.getElementById('view-high-scores').addEventListener('click', showLeaderboard); // From game over
+        document.getElementById('exit-to-menu-from-go').addEventListener('click', exitToMenu); // From game over
+        document.getElementById('back-from-leaderboard').addEventListener('click', () => showScreen('start')); // Back from leaderboard
+
+        // Sound
+        soundToggle.addEventListener('click', toggleSound);
+
+        // Settings Speed Selector
+        document.querySelectorAll('.speed-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.speed-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // ** NEW: Music Select Change Listener for Preview **
+        backgroundMusicSelect.addEventListener('change', handleMusicSelectionChange);
+
+         // ** NEW: Background Music Player 'ended' event for "Play All" **
+         backgroundMusicPlayer.addEventListener('ended', handleTrackEnd);
+
+
+        // Mobile Controls Setup
+        setupMobileControls();
+
+        // Window focus/blur for pausing
+         window.addEventListener('blur', () => { if (isGameRunning && !isPaused) togglePause(); });
+    }
+
+     function preloadAssets() {
+        console.log("Preloading assets...");
+        const imagePromises = IMAGE_ASSETS.map(src => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = resolve;
+                img.onerror = (err) => {
+                    console.warn(`Failed to load image: ${src}`, err);
+                    resolve(); // Resolve even if one image fails, don't block loading
+                };
+                img.src = src;
+            });
+        });
+
+         // Audio preloading is less reliable via JS, rely on 'preload="auto"'
+         // but we can try initiating a load.
+         const audioPromises = AUDIO_ASSETS.map(src => {
+              return new Promise((resolve) => {
+                  const audio = new Audio();
+                   // Can't reliably wait for 'canplaythrough', just initiate load
+                  audio.preload = 'auto';
+                  audio.src = src;
+                  // Attempt to load it minimally to cache if possible
+                  audio.load();
+                  // Resolve immediately as we can't reliably wait for full load state
+                  resolve();
+              });
+         });
+
+         return Promise.all([...imagePromises, ...audioPromises])
+             .then(() => console.log("Assets preloaded (or load initiated)."))
+             .catch(err => console.warn("Error during asset preloading phase:", err));
+    }
+
+    function createGridAndStarfield() {
+        // These are now static HTML elements, just ensure they exist
+        if (!document.querySelector('.starfield')) {
+            const sf = document.createElement('div');
+            sf.className = 'starfield';
+            gameContainer.prepend(sf); // Prepend to be behind everything
+        }
+
+
+    }
+
+    function setInitialShipPosition() {
+        shipX = (GAME_WIDTH - SHIP_WIDTH) / 2;
+        shipY = GAME_HEIGHT * 0.8 - SHIP_HEIGHT / 2; // Start lower
+        spaceship.style.left = `${shipX}px`;
+        spaceship.style.top = `${shipY}px`;
+        shipSpeedX = 0;
+        shipSpeedY = 0;
+        moveInput = { x: 0, y: 0 };
+        isMoving = false;
+        updatePropellantAnimation();
+        spaceship.style.transform = 'translate(-50%, -50%) rotate(0deg)'; // Reset tilt
+    }
+
+    // --- Screen Management ---
+
+    function showScreen(screenId) {
+        console.log(`Switching screen to: ${screenId}`);
+        // Stop music preview if navigating away from settings implicitly
+        if (activeScreen === 'settings' && screenId !== 'settings') {
+            stopMusicPreview();
+        }
+
+        for (const id in screens) {
+            if (screens[id]) {
+                screens[id].classList.remove('active');
+            } else {
+                 console.warn(`Screen element not found for ID: ${id}`);
+            }
+        }
+        if (screenId && screens[screenId]) { // Check if screenId is not null/undefined
+            screens[screenId].classList.add('active');
+            activeScreen = screenId;
+
+            // Special handling for leaderboard population
+            if (screenId === 'leaderboard') {
+                 populateLeaderboard();
+            }
+        } else if (!screenId) {
+            // Hiding all screens (e.g., starting game)
+            activeScreen = 'game'; // Or null, depending on how you track it
+        } else {
+            console.error(`Screen ID "${screenId}" not found!`);
+        }
+    }
+
+
+    // --- Game States ---
+
+    function startGame() {
+        console.log("Starting game...");
+        stopMusicPreview(); // Ensure any preview is stopped
+        showScreen(null); // Hide all screens to show game area
+        resetGame(); // *** CRITICAL: Reset state BEFORE starting timers ***
+
+        isGameRunning = true;
+        isGameOver = false;
+        isPaused = false;
+
+        // Start game timers
+        const spawnInterval = MOVEMENT_CONFIG[gameSpeed].baseSpeed > 11 ? 2800 : (MOVEMENT_CONFIG[gameSpeed].baseSpeed < 9 ? 4500 : 3500); // Adjust spawn based on speed
+        virusSpawnTimerId = setInterval(spawnVirus, spawnInterval);
+        powerUpTimerId = setInterval(spawnPowerUp, POWERUP_SPAWN_INTERVAL);
+        bossSpawnTimerId = setInterval(attemptBossSpawn, BOSS_SPAWN_CHECK_INTERVAL);
+
+        // Play music based on *current* selection (which might be 'all')
+        playBackgroundMusic();
+
+
+        // Ensure game loop is running (it might be already from initialize)
+        if (!gameLoopId) {
+            gameLoop();
+        }
+         // --- ADD THIS WORKAROUND ---
+     // Force an initial repaint/shake to potentially kickstart the background anim
+     requestAnimationFrame(() => {
+        applyScreenShake(1, 10); // Minimal shake, very short duration
+     });
+    }
+
+    function resetGame() {
+        console.log("Resetting game state...");
+
+        // 1. Clear Timers (including music preview)
+        console.log("Clearing timers...");
+        clearInterval(virusSpawnTimerId); virusSpawnTimerId = null;
+        clearInterval(powerUpTimerId); powerUpTimerId = null;
+        clearInterval(bossSpawnTimerId); bossSpawnTimerId = null;
+        clearTimeout(weaponRechargeTimeoutId); weaponRechargeTimeoutId = null;
+        clearTimeout(powerUpEffectTimeoutId); powerUpEffectTimeoutId = null;
+        clearTimeout(previewTimeoutId); previewTimeoutId = null; // ** Clear music preview timer **
+        activeTimeouts.forEach(id => clearTimeout(id));
+        activeTimeouts.clear();
+        console.log("Timers cleared.");
+
+        // 2. Reset Game State Variables
+        console.log("Resetting variables...");
+        score = 0;
+        afsprakennotasCount = 0;
+        inmengingenCount = 0;
+        meldingenCount = 0;
+        totalCount = 0;
+        subsidiestopCounter = 0;
+        isGameOver = false;
+        isGameRunning = false; // Will be set true by startGame
+        isPaused = false;
+        weaponCooldown = BASE_WEAPON_COOLDOWN;
+        canShoot = true;
+        lastShootTime = 0;
+        shipSpeedX = 0;
+        shipSpeedY = 0;
+        moveInput = { x: 0, y: 0 };
+        isMoving = false;
+        isShootingInput = false;
+        isPreviewingMusic = false; // ** Reset music preview state **
+        isPlayAllActive = false; // ** Reset play all state **
+        playAllIndex = 0; // ** Reset play all index **
+        console.log("Variables reset.");
+
+        // 3. Reset HUD and UI Elements
+        console.log("Resetting HUD...");
+        updateHUD();
+        weaponChargeBar.style.transition = 'none'; // Disable transition for instant reset
+        weaponChargeBar.style.width = '100%';
+        requestAnimationFrame(() => { // Re-enable transition after reset
+            weaponChargeBar.style.transition = 'width 0.05s linear';
+        });
+        console.log("HUD reset.");
+
+        // 4. Clear Dynamic DOM Elements & Arrays
+        console.log("Clearing dynamic elements...");
+        clearLasers();
+        clearViruses();
+        clearPowerUps();
+        clearEffects();
+        if (bossEnemy) {
+            if(bossEnemy.element) bossEnemy.element.remove();
+            if(bossEnemy.healthContainer) bossEnemy.healthContainer.remove();
+            bossEnemy = null;
+        }
+        console.log("Dynamic elements cleared.");
+
+         // 5. Reset Player Position
+         console.log("Resetting player position...");
+        setInitialShipPosition();
+         console.log("Player position reset.");
+
+        // 6. Reset Pause State (ensure no pause screen lingers)
+        const pauseScreen = document.getElementById('pause-screen');
+        if (pauseScreen) pauseScreen.remove(); // Remove if exists
+
+        // 7. Stop Music Player ** Important **
+        backgroundMusicPlayer.pause();
+        backgroundMusicPlayer.currentTime = 0;
+        // Don't reset src here, loadSettings or selection handles that
+
+         console.log("Game reset complete.");
+    }
+
+    function gameOver() {
+        if (isGameOver) return; // Prevent multiple calls
+        console.log("Game Over!");
+        isGameOver = true;
+        isGameRunning = false; // Stop game logic
+
+        // Stop timers (redundant if resetGame is called, but safe)
+        clearInterval(virusSpawnTimerId); virusSpawnTimerId = null;
+        clearInterval(powerUpTimerId); powerUpTimerId = null;
+        clearInterval(bossSpawnTimerId); bossSpawnTimerId = null;
+        clearTimeout(weaponRechargeTimeoutId); weaponRechargeTimeoutId = null;
+        clearTimeout(powerUpEffectTimeoutId); powerUpEffectTimeoutId = null;
+        clearTimeout(previewTimeoutId); previewTimeoutId = null; // Stop preview on game over
+        activeTimeouts.forEach(id => clearTimeout(id));
+        activeTimeouts.clear();
+
+        // Update final score display
+        finalScoreElement.textContent = score;
+
+        // Save high score
+        saveHighScore(score);
+
+        // Fade out music, play loser sound
+        fadeOutAudio(backgroundMusicPlayer, 1500);
+        isPlayAllActive = false; // Stop play all logic
+        playSound("loser-sound");
+
+        // Show game over screen after a short delay for sound
+        setTimeout(() => showScreen('gameOver'), 500);
+
+         // No need to call resetGame here, startGame will handle it on restart
+    }
+
+     function exitToMenu() {
+        console.log("Exiting to menu...");
+         // Stop game logic immediately
+        isGameRunning = false;
+        isPaused = false; // Ensure not paused
+
+        // Stop music and related states
+         stopMusicPreview(); // Stop any active preview
+         isPlayAllActive = false; // Stop play all logic
+         fadeOutAudio(backgroundMusicPlayer, 500);
+
+         // Perform a full reset of the game state
+         resetGame();
+
+        // Ensure no lingering pause screen
+        const pauseScreen = document.getElementById('pause-screen');
+        if (pauseScreen) pauseScreen.remove();
+
+        // Show the start screen
+        showScreen('start');
+    }
+
+
+    // --- Game Loop ---
+
+    function gameLoop(timestamp) {
+        // Always request the next frame
+        gameLoopId = requestAnimationFrame(gameLoop);
+
+
+
+        // Only run game logic if running and not paused
+        if (isGameRunning && !isPaused) {
+            moveSpaceship();
+            updateLasers();
+            updateViruses();
+            updatePowerUps();
+            if (bossEnemy) updateBoss();
+            updateEffects();
+            checkCollisions();
+
+             // Auto-fire if input held
+             if (isShootingInput) {
+                 tryToShoot();
+             }
+        }
+    }
+
+
+
+
+    // --- Player Movement ---
+
+    function handleKeyDown(e) {
+         if (isGameOver) return; // Don't handle input if game is over
+
+        // Handle pause first, even if not running (to allow pausing on screens?) - No, only if running
+        if (isGameRunning && (e.key === 'Escape' || e.key.toLowerCase() === 'p')) {
+            togglePause();
+            return; // Prevent other actions when pausing/unpausing
+        }
+
+        if (!isGameRunning || isPaused) return; // Ignore other keys if not running or paused
+
+        let inputChanged = false;
+        switch (e.key.toLowerCase()) {
+            case 'arrowleft': case 'q': moveInput.x = -1; inputChanged = true; break;
+            case 'arrowright': case 'd': moveInput.x = 1; inputChanged = true; break;
+            case 'arrowup': case 'z': moveInput.y = -1; inputChanged = true; break;
+            case 'arrowdown': case 's': moveInput.y = 1; inputChanged = true; break;
+            case ' ':
+                 if (!isShootingInput) { // Fire only on initial press logic handled here
+                     isShootingInput = true;
+                     tryToShoot(); // Try shooting immediately on press
+                 }
+                break;
+        }
+
+        if (inputChanged) {
+             isMoving = true;
+            updatePropellantAnimation();
+        }
+    }
+
+    function handleKeyUp(e) {
+        if (!isGameRunning || isPaused || isGameOver) return;
+
+         let inputChanged = false;
+        switch (e.key.toLowerCase()) {
+            case 'arrowleft': case 'a': if (moveInput.x < 0) { moveInput.x = 0; inputChanged = true; } break;
+            case 'arrowright': case 'd': if (moveInput.x > 0) { moveInput.x = 0; inputChanged = true; } break;
+            case 'arrowup': case 'w': if (moveInput.y < 0) { moveInput.y = 0; inputChanged = true; } break;
+            case 'arrowdown': case 's': if (moveInput.y > 0) { moveInput.y = 0; inputChanged = true; } break;
+            case ' ': isShootingInput = false; break;
+        }
+
+         if (inputChanged) {
+            isMoving = moveInput.x !== 0 || moveInput.y !== 0;
+            updatePropellantAnimation();
+         }
+    }
+
+    function moveSpaceship() {
+        const config = MOVEMENT_CONFIG[gameSpeed];
+
+        // Apply acceleration
+        if (moveInput.x !== 0) shipSpeedX += moveInput.x * config.acceleration;
+        if (moveInput.y !== 0) shipSpeedY += moveInput.y * config.acceleration;
+
+        // Apply friction
+        shipSpeedX *= config.friction;
+        shipSpeedY *= config.friction;
+
+        // Limit max speed
+        shipSpeedX = Math.max(-config.maxSpeed, Math.min(config.maxSpeed, shipSpeedX));
+        shipSpeedY = Math.max(-config.maxSpeed, Math.min(config.maxSpeed, shipSpeedY));
+
+        // Stop drift if speed is very low
+        if (Math.abs(shipSpeedX) < 0.1) shipSpeedX = 0;
+        if (Math.abs(shipSpeedY) < 0.1) shipSpeedY = 0;
+
+        // Update position
+        shipX += shipSpeedX;
+        shipY += shipSpeedY;
+
+        // Keep within bounds
+        shipX = Math.max(0, Math.min(GAME_WIDTH - SHIP_WIDTH, shipX));
+        shipY = Math.max(0, Math.min(GAME_HEIGHT - SHIP_HEIGHT, shipY));
+
+        // Update DOM
+        spaceship.style.left = `${shipX}px`;
+        spaceship.style.top = `${shipY}px`;
+
+        // Apply tilt based on horizontal speed
+        const tiltAngle = shipSpeedX * -1.5; // Adjust multiplier for sensitivity
+         spaceship.style.transform = `translate(-50%, -50%) rotate(${tiltAngle}deg)`;
+
+
+        updatePropellantAnimation(); // Update flame based on speed
+    }
+
+    function updatePropellantAnimation() {
+        propellant.classList.toggle('moving', isMoving || Math.abs(shipSpeedX) > 1 || Math.abs(shipSpeedY) > 1);
+         const speedMagnitude = Math.sqrt(shipSpeedX * shipSpeedX + shipSpeedY * shipSpeedY);
+         const fastThreshold = MOVEMENT_CONFIG[gameSpeed].maxSpeed * 0.6;
+         propellant.classList.toggle('fast', speedMagnitude > fastThreshold);
+    }
+
+    // --- Shooting ---
+
+    function tryToShoot() {
+        if (!canShoot || isPaused) return; // Check pause status
+
+        const currentTime = Date.now();
+        if (currentTime - lastShootTime >= weaponCooldown) {
+            shootLaser();
+            lastShootTime = currentTime;
+            canShoot = false;
+            weaponChargeBar.style.width = '0%';
+
+            // Clear previous recharge timeout if it exists
+            clearTimeout(weaponRechargeTimeoutId);
+            activeTimeouts.delete(weaponRechargeTimeoutId);
+
+
+            // Recharge weapon - store timeout ID
+             weaponRechargeTimeoutId = setTimeout(() => {
+                 canShoot = true;
+                 if (!isPaused) { // Only visually update if not paused
+                     weaponChargeBar.style.width = '100%';
+                 }
+                 activeTimeouts.delete(weaponRechargeTimeoutId); // Remove from tracking
+             }, weaponCooldown);
+            activeTimeouts.add(weaponRechargeTimeoutId); // Add to tracking
+
+            // Animate cooldown bar (visual only, actual cooldown uses timeout)
+            animateWeaponRecharge(weaponCooldown);
+        }
+    }
+
+    function shootLaser() {
+        const laserX = shipX + SHIP_WIDTH / 2 - LASER_WIDTH / 2;
+        const laserY = shipY; // Shoot from top of ship
+
+        const laser = document.createElement('div');
+        laser.className = 'laser';
+        laser.style.left = `${laserX}px`;
+        laser.style.top = `${laserY}px`;
+        gameContainer.appendChild(laser);
+
+        lasers.push({ element: laser, x: laserX, y: laserY });
+        playSound('laser-sound');
+    }
+
+    function updateLasers() {
+        for (let i = lasers.length - 1; i >= 0; i--) {
+            const laser = lasers[i];
+            laser.y -= LASER_SPEED;
+            laser.element.style.top = `${laser.y}px`;
+
+            if (laser.y < -LASER_HEIGHT) {
+                laser.element.remove();
+                lasers.splice(i, 1);
+            }
+        }
+    }
+
+    function clearLasers() {
+        lasers.forEach(laser => laser.element.remove());
+        lasers = [];
+    }
+
+    function animateWeaponRecharge(duration) {
+        // This is purely visual, the actual 'canShoot' is timer based
+        let start = null;
+        let animationId = null;
+        let currentRequestId = null; // Track the request ID
+
+        function step(timestamp) {
+             if (isPaused) { // If paused, just request the next frame without updating progress
+                currentRequestId = requestAnimationFrame(step);
+                return;
+             }
+
+            if (!start) start = timestamp;
+            const elapsed = timestamp - start;
+            const progress = Math.min(elapsed / duration, 1);
+
+            weaponChargeBar.style.width = `${progress * 100}%`;
+
+            if (progress < 1) {
+                currentRequestId = requestAnimationFrame(step);
+            } else {
+                 currentRequestId = null; // Animation finished
+            }
+        }
+         // Cancel any previous animation frame before starting a new one
+         // This scenario is unlikely here as tryToShoot prevents overlapping calls, but good practice
+         // if (currentRequestId) {
+         //     cancelAnimationFrame(currentRequestId);
+         // }
+
+         // Check if not paused before starting animation
+         if (!isPaused) {
+            currentRequestId = requestAnimationFrame(step);
+         }
+    }
+
+    // --- Viruses ---
+
+    function spawnVirus() {
+        if (!isGameRunning || isGameOver || isPaused || bossEnemy) return; // Don't spawn if boss is active
+
+        let virusTypeKey;
+        const random = Math.random();
+        const scoreFactor = Math.min(score / 10000, 1); // 0 to 1 based on score up to 10k
+
+        // Weighted spawning based on score
+        if (random < 0.6 - scoreFactor * 0.3) virusTypeKey = 'd0';        // Starts high, decreases
+        else if (random < 0.9 - scoreFactor * 0.1) virusTypeKey = 'ateljee'; // Mid range, stable
+        else virusTypeKey = 'stadskantoor';                               // Starts low, increases
+
+        const config = VIRUS_CONFIG[virusTypeKey];
+        if (!config) {
+            console.error("Invalid virus type key:", virusTypeKey);
+            return;
+        }
+
+        const virusElement = document.createElement('div');
+        virusElement.className = `virus ${virusTypeKey}`;
+
+        const spawnX = Math.random() * (GAME_WIDTH - config.width);
+        const spawnY = -config.height; // Start off-screen top
+
+        virusElement.style.left = `${spawnX}px`;
+        virusElement.style.top = `${spawnY}px`;
+        gameContainer.appendChild(virusElement);
+
+        // Dynamic speed based on game speed setting and score
+        let speed = config.baseSpeed * (gameSpeed === 'slow' ? 0.8 : (gameSpeed === 'fast' ? 1.3 : 1));
+        speed += scoreFactor * 0.8; // Add speed based on score progress
+
+        viruses.push({
+            element: virusElement,
+            x: spawnX,
+            y: spawnY,
+            type: virusTypeKey,
+            config: config,
+            health: config.health,
+            speed: speed,
+            movementPattern: Math.random() < 0.3 ? 'zigzag' : 'straight', // 30% chance of zigzag
+            zigzagOffset: Math.random() * 100, // Phase offset for zigzag
+            isFragment: false,
+            velX: 0, // For fragments
+            velY: 0, // For fragments
+            rotation: 0, // For fragments
+            rotationSpeed: 0, // For fragments
+            fadeTimer: null // For fragment fading timeout
+        });
+    }
+
+    function updateViruses() {
+        const bottomBoundary = GAME_HEIGHT;
+
+        for (let i = viruses.length - 1; i >= 0; i--) {
+            // Ensure virus exists before processing (safety check)
+            if (!viruses[i]) continue;
+             const virus = viruses[i];
+
+
+            if (virus.isFragment) {
+                // Fragment movement
+                virus.x += virus.velX;
+                virus.y += virus.velY;
+                virus.velY += 0.05; // Gravity effect
+                virus.rotation += virus.rotationSpeed;
+
+                 virus.element.style.left = `${virus.x}px`;
+                 virus.element.style.top = `${virus.y}px`;
+                 virus.element.style.transform = `rotate(${virus.rotation}deg) scale(${virus.element.style.scale || 1})`; // Apply rotation and potential scale
+
+                 // Fade out fragments over time or if off-screen
+                if (virus.y > bottomBoundary || virus.x < -virus.config.width || virus.x > GAME_WIDTH) { // Also check side boundaries
+                    if (!virus.fadeTimer && virus.element) { // Start fade timer only once and if element exists
+                         // Immediately start fading if off-screen
+                         virus.element.classList.add('fading');
+                         virus.fadeTimer = setTimeout(() => { // Schedule removal after fade
+                             if (virus.element) virus.element.remove();
+                             // Remove from array *only after* removal, careful with splice index
+                             // It's safer to mark for removal and clean up later, or use filter, but splice is okay if careful
+                             // Check if the element at 'i' is still the one we intended to remove
+                             if (viruses[i] === virus) {
+                                 viruses.splice(i, 1);
+                             } else {
+                                 // If index 'i' is no longer correct due to other splices, find the correct one
+                                 const actualIndex = viruses.findIndex(v => v === virus);
+                                 if (actualIndex > -1) viruses.splice(actualIndex, 1);
+                             }
+                             activeTimeouts.delete(virus.fadeTimer);
+                         }, 800); // Match CSS fade duration
+                         activeTimeouts.add(virus.fadeTimer);
+                    }
+                } else if (!virus.fadeTimer && virus.element) { // Start normal fade timer if still on screen
+                      virus.fadeTimer = setTimeout(() => {
+                          if (virus.element) virus.element.classList.add('fading');
+                          const removalTimer = setTimeout(() => {
+                              if (virus.element) virus.element.remove();
+                              // Similar removal logic as above
+                               if (viruses[i] === virus) {
+                                   viruses.splice(i, 1);
+                               } else {
+                                   const actualIndex = viruses.findIndex(v => v === virus);
+                                   if (actualIndex > -1) viruses.splice(actualIndex, 1);
+                               }
+                              activeTimeouts.delete(removalTimer);
+                          }, 800); // Match CSS fade duration
+                          activeTimeouts.add(removalTimer);
+                           activeTimeouts.delete(virus.fadeTimer); // Remove the initial fade timer itself
+                      }, 2000 + Math.random() * 1000); // Start fading after 2-3 seconds
+                     activeTimeouts.add(virus.fadeTimer);
+                }
+
+            } else {
+                // Regular virus movement
+                virus.y += virus.speed;
+
+                if (virus.movementPattern === 'zigzag') {
+                    const amplitude = 2;
+                    const frequency = 0.04;
+                    virus.x += Math.sin((virus.y + virus.zigzagOffset) * frequency) * amplitude;
+                     // Clamp x within bounds to prevent getting stuck
+                     virus.x = Math.max(0, Math.min(GAME_WIDTH - virus.config.width, virus.x));
+                    virus.element.style.left = `${virus.x}px`;
+                }
+                virus.element.style.top = `${virus.y}px`;
+
+                // Check if reached bottom
+                if (virus.y > bottomBoundary) {
+                    handleVirusReachBottom(virus);
+                    virus.element.remove();
+                    viruses.splice(i, 1);
+                }
+            }
+        }
+    }
+
+    function handleVirusReachBottom(virus) {
+        // Don't penalize for fragments reaching bottom
+        if (virus.isFragment) return;
+
+        console.log(`${virus.type} reached bottom.`);
+        totalCount += virus.config.deduction;
+        subsidiestopCounter = Math.min(100, subsidiestopCounter + (virus.config.subsidyHit || 0));
+
+        // Increment specific counters based on type
+        if (virus.type === 'd0') inmengingenCount++;
+        else if (virus.type === 'ateljee') afsprakennotasCount++;
+        else if (virus.type === 'stadskantoor' || virus.type === 'stadgent_minion') meldingenCount++; // Stadgent minions count as 'meldingen'
+
+        updateHUD();
+        playSound('hit-sound');
+
+        // Apply screen shake when a virus hits the bottom
+        applyScreenShake(5, 150); // Small shake
+
+        // Check game over conditions
+        if (totalCount >= MAX_DEDUCTIONS || subsidiestopCounter >= 100) {
+            gameOver();
+        }
+    }
+
+    function damageVirus(virus, index) {
+        virus.health--;
+        playSound('no sound necessary'); // Changed from empty string
+
+        // Visual hit flash
+        if (virus.element) {
+             virus.element.classList.add('hit');
+             const hitTimeout = setTimeout(() => {
+                 // Check if element still exists before removing class
+                 if(virus.element) virus.element.classList.remove('hit');
+                 activeTimeouts.delete(hitTimeout);
+             }, 100); // Duration of flash
+            activeTimeouts.add(hitTimeout);
+        }
+
+
+        if (virus.health <= 0) {
+            score += virus.config.points;
+            createExplosionEffect(virus.x + virus.config.width / 2, virus.y + virus.config.height / 2);
+            playSound('explosion-sound');
+
+             // Only create fragments if the config allows it (count > 0)
+            if (!virus.isFragment && virus.config.fragmentCount > 0) {
+                createVirusFragments(virus);
+            }
+
+             if (virus.element) virus.element.remove();
+             // Remove from array using the provided index
+            viruses.splice(index, 1);
+             updateHUD(); // Update score immediately
+
+            return true; // Virus was destroyed
+        }
+        return false; // Virus damaged but not destroyed
+    }
+
+     function createVirusFragments(parentVirus) {
+         const config = parentVirus.config;
+         const count = config.fragmentCount;
+         // Use parent's config for fragment image/size unless overridden
+         const fragImg = config.fragmentImage || config.image;
+         const fragW = config.fragmentWidth || config.width / 2;
+         const fragH = config.fragmentHeight || config.height / 2;
+
+        for (let i = 0; i < count; i++) {
+            const fragmentElement = document.createElement('div');
+            // Base class + parent type for styling lookup
+            fragmentElement.className = `virus-fragment ${parentVirus.type}`;
+             // Apply specific fragment style if needed via CSS or inline
+             fragmentElement.style.backgroundImage = `url('${fragImg}')`;
+             fragmentElement.style.width = `${fragW}px`;
+             fragmentElement.style.height = `${fragH}px`;
+
+
+            const spawnX = parentVirus.x + config.width / 2 - fragW / 2 + (Math.random() - 0.5) * config.width * 0.5;
+            const spawnY = parentVirus.y + config.height / 2 - fragH / 2 + (Math.random() - 0.5) * config.height * 0.5;
+
+            fragmentElement.style.left = `${spawnX}px`;
+            fragmentElement.style.top = `${spawnY}px`;
+            gameContainer.appendChild(fragmentElement);
+
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1.5 + Math.random() * 2.5;
+
+            viruses.push({
+                element: fragmentElement,
+                x: spawnX,
+                y: spawnY,
+                type: parentVirus.type, // Keep parent type for potential scoring/logic
+                config: { // Simplified config for fragments
+                    width: fragW, height: fragH,
+                    points: Math.round(config.points / (count * 2)), // Less points for fragments
+                    deduction: 0.5, // Standard fragment deduction on player collision
+                    subsidyHit: 0 // Fragments don't affect subsidy
+                },
+                health: 1, // Fragments have 1 health
+                speed: 0, // Not used for fragments
+                isFragment: true,
+                velX: Math.cos(angle) * speed,
+                velY: Math.sin(angle) * speed - 1, // Initial upward pop
+                rotation: Math.random() * 360,
+                rotationSpeed: (Math.random() - 0.5) * 10,
+                fadeTimer: null // Timer for fading out
+            });
+        }
+    }
+
+
+    function clearViruses() {
+        viruses.forEach(virus => {
+            if(virus.element) virus.element.remove();
+             // Clear any associated timers (like fade timers for fragments)
+             if (virus.fadeTimer) {
+                 clearTimeout(virus.fadeTimer);
+                 activeTimeouts.delete(virus.fadeTimer);
+                 // Find and remove related removalTimer if it exists (more robust)
+                 // This requires storing the removalTimer ID on the virus object or a map
+             }
+        });
+        viruses = [];
+    }
+
+    // --- Power-Ups ---
+
+    function spawnPowerUp() {
+         // Only spawn one powerup at a time
+         if (!isGameRunning || isGameOver || isPaused || powerUps.length > 0 || bossEnemy) return;
+
+        const powerUpSize = 48;
+        const spawnX = Math.random() * (GAME_WIDTH - powerUpSize);
+        // Spawn in the upper-middle part of the screen
+        const spawnY = Math.random() * (GAME_HEIGHT * 0.4) + GAME_HEIGHT * 0.15;
+
+        // Use the existing image element
+        powerUpImage.style.left = `${spawnX}px`;
+        powerUpImage.style.top = `${spawnY}px`;
+        powerUpImage.style.display = 'block';
+
+        powerUps.push({
+            element: powerUpImage, // Reference the single element
+            x: spawnX,
+            y: spawnY,
+            width: powerUpSize,
+            height: powerUpSize
+        });
+         console.log("PowerUp Spawned");
+    }
+
+    function updatePowerUps() {
+        // Power-ups are stationary, no movement update needed
+         // Could add subtle animation updates here if desired
+    }
+
+    function activatePowerUp(powerUp, index) {
+        console.log("PowerUp Activated!");
+        playSound('powerup-sound');
+
+         // Create collection visual effect
+         createPowerUpCollectEffect(powerUp.x + powerUp.width / 2, powerUp.y + powerUp.height / 2);
+
+        // Hide the power-up image
+        powerUp.element.style.display = 'none';
+        powerUps.splice(index, 1); // Remove from active array
+
+        // Apply effect: Faster shooting
+        weaponCooldown = POWERUP_WEAPON_COOLDOWN;
+        spaceship.style.filter = 'drop-shadow(0 0 15px #0ff)'; // Add glow effect
+
+        // Clear previous power-up timeout if any
+         clearTimeout(powerUpEffectTimeoutId);
+         activeTimeouts.delete(powerUpEffectTimeoutId);
+
+
+        // Set timer to remove effect
+        powerUpEffectTimeoutId = setTimeout(() => {
+            weaponCooldown = BASE_WEAPON_COOLDOWN;
+            // Check if ship still exists before resetting filter
+            if (spaceship) spaceship.style.filter = ''; // Remove glow
+             console.log("PowerUp Expired");
+            activeTimeouts.delete(powerUpEffectTimeoutId); // Remove from tracking
+        }, POWERUP_DURATION);
+        activeTimeouts.add(powerUpEffectTimeoutId); // Add to tracking
+    }
+
+    function clearPowerUps() {
+        if (powerUpImage) {
+             powerUpImage.style.display = 'none'; // Hide the element
+        }
+        powerUps = []; // Clear the array
+         // Also clear the effect timeout if active
+         if (powerUpEffectTimeoutId) {
+             clearTimeout(powerUpEffectTimeoutId);
+             activeTimeouts.delete(powerUpEffectTimeoutId);
+             weaponCooldown = BASE_WEAPON_COOLDOWN; // Ensure cooldown resets if cleared mid-powerup
+              // Check if spaceship exists before resetting filter
+             if (spaceship) spaceship.style.filter = '';
+         }
+    }
+
+    // --- Boss ---
+
+    function attemptBossSpawn() {
+        if (!isGameRunning || isGameOver || isPaused || bossEnemy || score < BOSS_SPAWN_SCORE_THRESHOLD) return;
+
+        if (Math.random() < BOSS_SPAWN_CHANCE) {
+            spawnBoss();
+        }
+    }
+
+    function spawnBoss() {
+        console.log("Spawning Boss!");
+        playSound('alarm-sound'); // Boss warning
+
+        const bossElement = document.createElement('img');
+        bossElement.id = 'boss-image';
+        bossElement.src = BOSS_CONFIG.image; // Use correct boss image from config
+        bossElement.style.width = `${BOSS_CONFIG.width}px`;
+        bossElement.style.height = `${BOSS_CONFIG.height}px`;
+
+        const spawnX = (GAME_WIDTH - BOSS_CONFIG.width) / 2;
+        const spawnY = -BOSS_CONFIG.height - 30; // Start further off-screen
+
+        bossElement.style.left = `${spawnX}px`;
+        bossElement.style.top = `${spawnY}px`;
+        bossElement.style.display = 'block'; // Make sure it's visible
+
+        // Create health bar elements
+        const healthContainer = document.createElement('div');
+        healthContainer.className = 'boss-health-container';
+        healthContainer.style.width = `${BOSS_CONFIG.width}px`;
+        healthContainer.style.left = `${spawnX}px`;
+        healthContainer.style.top = `${spawnY - 20}px`; // Above the boss
+
+        const healthBar = document.createElement('div');
+        healthBar.className = 'boss-health-bar';
+        healthBar.style.width = '100%';
+        healthContainer.appendChild(healthBar);
+
+        // Add to game
+        gameContainer.appendChild(bossElement);
+        gameContainer.appendChild(healthContainer);
+
+        bossEnemy = {
+            element: bossElement,
+            healthContainer: healthContainer,
+            healthBar: healthBar,
+            x: spawnX,
+            y: spawnY,
+            health: BOSS_CONFIG.health,
+            maxHealth: BOSS_CONFIG.health,
+            points: BOSS_CONFIG.points,
+            width: BOSS_CONFIG.width,
+            height: BOSS_CONFIG.height,
+            movementPattern: 'entrance', // Initial state
+            directionX: 1,
+            lastAttackTime: Date.now() + 2000 // Delay first attack
+        };
+    }
+
+    function updateBoss() {
+        if (!bossEnemy) return;
+
+        // Movement
+        switch (bossEnemy.movementPattern) {
+            case 'entrance':
+                bossEnemy.y += 1.5; // Smoother entrance
+                if (bossEnemy.y >= 80) { // Enter further down
+                    bossEnemy.y = 80;
+                    bossEnemy.movementPattern = 'side-to-side';
+                }
+                break;
+            case 'side-to-side':
+                bossEnemy.x += bossEnemy.directionX * BOSS_CONFIG.moveSpeedX;
+                if (bossEnemy.x <= 0 || bossEnemy.x >= GAME_WIDTH - bossEnemy.width) {
+                    bossEnemy.directionX *= -1;
+                     bossEnemy.x = Math.max(0, Math.min(GAME_WIDTH - bossEnemy.width, bossEnemy.x)); // Clamp position
+                }
+                break;
+        }
+
+        // Update positions
+        bossEnemy.element.style.left = `${bossEnemy.x}px`;
+        bossEnemy.element.style.top = `${bossEnemy.y}px`;
+        bossEnemy.healthContainer.style.left = `${bossEnemy.x}px`;
+        bossEnemy.healthContainer.style.top = `${bossEnemy.y - 20}px`; // Keep health bar above
+
+        // Attacks
+        const currentTime = Date.now();
+        if (currentTime - bossEnemy.lastAttackTime > BOSS_CONFIG.attackInterval) {
+            bossAttack();
+            bossEnemy.lastAttackTime = currentTime;
+        }
+
+         // ** NEW ** Check if Boss reached bottom (Game Over Condition)
+         if (bossEnemy.y > GAME_HEIGHT) {
+             console.log("Boss reached bottom!");
+             subsidiestopCounter = 100; // Immediate 100% subsidy stop
+             updateHUD();
+             // Create a massive explosion or effect?
+             createBossExplosionEffect(bossEnemy.x + bossEnemy.width / 2, bossEnemy.y + bossEnemy.height / 2 - 50); // Explode slightly above bottom edge
+             gameOver();
+             // Remove boss elements immediately? Or let gameOver handle general cleanup?
+             // Let resetGame handle cleanup.
+         }
+    }
+
+    function bossAttack() {
+         if (!bossEnemy || isPaused) return;
+
+        // Spawn 2-3 minions
+        const spawnCount = Math.floor(Math.random() * 2) + 2; // 2 or 3
+        // ** UPDATED: Use the correct minion config **
+        const minionConfig = VIRUS_CONFIG['stadgent_minion'];
+
+         if (!minionConfig) {
+            console.error("StadGent Minion config not found!");
+            return;
+         }
+
+        for (let i = 0; i < spawnCount; i++) {
+            const virusElement = document.createElement('div');
+            // ** UPDATED: Use the correct class name for minions **
+            virusElement.className = `virus stadgent_minion`; // Assign correct class for CSS styling
+
+            // Spawn slightly offset from boss center
+            const angle = (Math.PI / (spawnCount + 1)) * (i + 1); // Spread them out
+             const spawnOffsetX = Math.cos(angle - Math.PI/2) * bossEnemy.width * 0.4;
+             const spawnOffsetY = Math.sin(angle - Math.PI/2) * bossEnemy.height * 0.2;
+
+            const spawnX = bossEnemy.x + bossEnemy.width / 2 - minionConfig.width / 2 + spawnOffsetX;
+            const spawnY = bossEnemy.y + bossEnemy.height * 0.8 + spawnOffsetY; // Spawn near bottom of boss
+
+            virusElement.style.left = `${spawnX}px`;
+            virusElement.style.top = `${spawnY}px`;
+            gameContainer.appendChild(virusElement);
+
+            viruses.push({
+                element: virusElement,
+                x: spawnX,
+                y: spawnY,
+                // ** UPDATED: Use the correct type name **
+                type: 'stadgent_minion', // Use specific type for logic
+                config: minionConfig,
+                health: minionConfig.health,
+                speed: minionConfig.baseSpeed * (gameSpeed === 'slow' ? 0.8 : (gameSpeed === 'fast' ? 1.3 : 1)), // Apply game speed modifier
+                movementPattern: 'straight',
+                isFragment: false,
+                velX: 0, velY: 0, rotation: 0, rotationSpeed: 0,
+                fadeTimer: null
+            });
+        }
+        // Play a sound for the boss attack
+         playSound('laser-sound'); // Maybe a different sound?
+    }
+
+    function damageBoss() {
+         if (!bossEnemy) return false;
+
+         bossEnemy.health--;
+         playSound('hit-sound'); // Generic hit
+
+        // Update health bar visually
+        const healthPercent = Math.max(0, (bossEnemy.health / bossEnemy.maxHealth) * 100);
+        bossEnemy.healthBar.style.width = `${healthPercent}%`;
+
+        // Visual hit flash
+        bossEnemy.element.classList.add('hit');
+         const hitTimeout = setTimeout(() => {
+             if(bossEnemy && bossEnemy.element) bossEnemy.element.classList.remove('hit');
+             activeTimeouts.delete(hitTimeout);
+         }, 150);
+         activeTimeouts.add(hitTimeout);
+
+
+        if (bossEnemy.health <= 0) {
+            console.log("Boss Defeated!");
+            score += bossEnemy.points;
+            updateHUD();
+            createBossExplosionEffect(bossEnemy.x + bossEnemy.width / 2, bossEnemy.y + bossEnemy.height / 2);
+            playSound('bigexplosion-sound');
+
+            // Remove boss elements
+            if(bossEnemy.element) bossEnemy.element.remove();
+            if(bossEnemy.healthContainer) bossEnemy.healthContainer.remove();
+            bossEnemy = null;
+
+            // Spawn a guaranteed power-up after defeating boss
+             spawnPowerUp();
+
+            return true; // Boss defeated
+        }
+        return false; // Boss damaged
+    }
+
+
+    // --- Collision Detection ---
+
+    function checkCollisions() {
+         if (isGameOver || isPaused) return; // Don't check collisions if game over or paused
+
+        // 1. Laser <-> Virus/Boss
+        for (let i = lasers.length - 1; i >= 0; i--) {
+            // Safety check if laser was removed in a previous iteration
+            if (!lasers[i]) continue;
+            const laser = lasers[i];
+            let laserRemoved = false;
+
+            // Check vs Boss first (larger target)
+            if (bossEnemy) {
+                if (rectOverlap(laser.x, laser.y, LASER_WIDTH, LASER_HEIGHT, bossEnemy.x, bossEnemy.y, bossEnemy.width, bossEnemy.height)) {
+                     createLaserHitEffect(laser.x + LASER_WIDTH / 2, laser.y); // Hit flash at top of laser
+                    laser.element.remove();
+                    lasers.splice(i, 1);
+                    damageBoss(); // damageBoss returns true if defeated
+                    laserRemoved = true;
+                    continue; // Laser is gone, move to next laser
+                }
+            }
+
+             // Check vs Viruses (if laser still exists)
+            for (let j = viruses.length - 1; j >= 0; j--) {
+                 // Safety check if virus was removed
+                 if (!viruses[j]) continue;
+                 if (laserRemoved) break; // Stop checking viruses if laser already hit boss or another virus
+
+                const virus = viruses[j];
+                if (rectOverlap(laser.x, laser.y, LASER_WIDTH, LASER_HEIGHT, virus.x, virus.y, virus.config.width, virus.config.height)) {
+                    createLaserHitEffect(laser.x + LASER_WIDTH / 2, laser.y); // Hit flash
+                    laser.element.remove();
+                    lasers.splice(i, 1);
+                     // damageVirus handles removal if health <= 0 and returns true if destroyed
+                    const destroyed = damageVirus(virus, j);
+                    laserRemoved = true;
+                     // If virus was destroyed, we already spliced it, so break inner loop.
+                     // If not destroyed, laser is still gone, so break inner loop.
+                    break;
+                }
+            }
+        }
+
+        // 2. Ship <-> PowerUp
+        for (let i = powerUps.length - 1; i >= 0; i--) {
+             if (!powerUps[i]) continue; // Safety check
+            const powerUp = powerUps[i];
+             // Use slightly smaller hitbox for ship for easier pickup
+            if (rectOverlap(shipX + 5, shipY + 5, SHIP_WIDTH - 10, SHIP_HEIGHT - 10, powerUp.x, powerUp.y, powerUp.width, powerUp.height)) {
+                activatePowerUp(powerUp, i); // activatePowerUp handles removal
+                break; // Only collect one powerup per frame
+            }
+        }
+
+        // 3. Ship <-> Virus/Fragment (Collision Damage)
+        for (let i = viruses.length - 1; i >= 0; i--) {
+             if (!viruses[i]) continue; // Safety check
+            const virus = viruses[i];
+             // Check overlap with a slightly smaller ship hitbox for forgiveness
+             const shipHitboxPadding = 10;
+            if (rectOverlap(
+                shipX + shipHitboxPadding, shipY + shipHitboxPadding, SHIP_WIDTH - 2*shipHitboxPadding, SHIP_HEIGHT - 2*shipHitboxPadding,
+                virus.x, virus.y, virus.config.width, virus.config.height
+            )) {
+                console.log("Ship collision with", virus.type, virus.isFragment ? "(Fragment)" : "");
+
+                 // Damage player based on virus/fragment config
+                 const deductionAmount = virus.config.deduction || (virus.isFragment ? 0.5 : 1); // Use config value, fallback based on type
+                 const subsidyHitAmount = virus.isFragment ? 0 : (virus.config.subsidyHit || 0); // No subsidy hit from fragments
+
+                totalCount = Math.min(MAX_DEDUCTIONS, totalCount + deductionAmount);
+                subsidiestopCounter = Math.min(100, subsidiestopCounter + subsidyHitAmount);
+
+                updateHUD();
+                createShipDamageEffect(); // Visual/audio feedback
+                playSound('hit-sound');
+                playSound('explosion-sound'); // Play explosion on ship hit too
+
+                // Destroy the virus/fragment immediately on collision
+                 createExplosionEffect(virus.x + virus.config.width / 2, virus.y + virus.config.height / 2);
+                 if(virus.element) virus.element.remove();
+                 viruses.splice(i, 1); // Remove the collided virus/fragment
+
+
+                // Check game over
+                if (totalCount >= MAX_DEDUCTIONS || subsidiestopCounter >= 100) {
+                    gameOver();
+                    return; // Exit collision check if game is over
+                }
+
+                // Break after one collision per frame to avoid multi-hits? Seems reasonable.
+                 break;
+            }
+        }
+    }
+
+    function rectOverlap(x1, y1, w1, h1, x2, y2, w2, h2) {
+        // Check for invalid inputs (NaN or undefined coords/dimensions)
+        if (isNaN(x1) || isNaN(y1) || isNaN(w1) || isNaN(h1) ||
+            isNaN(x2) || isNaN(y2) || isNaN(w2) || isNaN(h2)) {
+            // console.warn("Invalid input to rectOverlap:", {x1, y1, w1, h1}, {x2, y2, w2, h2});
+            return false;
+        }
+        return x1 < x2 + w2 &&
+               x1 + w1 > x2 &&
+               y1 < y2 + h2 &&
+               y1 + h1 > y2;
+    }
+
+    // --- Effects ---
+
+    function createExplosionEffect(x, y) {
+        const count = 10; // Reduced particle count for performance
+        for (let i = 0; i < count; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'explosion-particle';
+             // Position relative to the game container
+             // Calculate initial position slightly offset from center (x, y)
+            const initialX = x + (Math.random() - 0.5) * 10;
+            const initialY = y + (Math.random() - 0.5) * 10;
+
+            particle.style.left = `${initialX}px`;
+            particle.style.top = `${initialY}px`;
+             particle.style.transform = 'scale(0.1)'; // Start small for animation
+             particle.style.opacity = '1';
+
+            const angle = Math.random() * Math.PI * 2;
+            const force = 20 + Math.random() * 30;
+            const targetX = initialX + Math.cos(angle) * force;
+            const targetY = initialY + Math.sin(angle) * force;
+            const duration = 0.3 + Math.random() * 0.3; // 300-600ms
+
+            particle.style.transition = `transform ${duration}s ease-out, opacity ${duration}s ease-out, left ${duration}s ease-out, top ${duration}s ease-out`;
+
+            gameContainer.appendChild(particle);
+            effects.push({ element: particle }); // Add to effects array for potential cleanup
+
+            // Trigger animation/transition shortly after adding to DOM
+            requestAnimationFrame(() => {
+                 particle.style.transform = 'scale(1.8)';
+                 particle.style.opacity = '0';
+                 particle.style.left = `${targetX}px`;
+                 particle.style.top = `${targetY}px`;
+            });
+
+            // Schedule cleanup
+            const cleanupTimer = setTimeout(() => {
+                // Check if particle still exists before removing
+                 if (particle.parentNode === gameContainer) {
+                     particle.remove();
+                 }
+                 // Remove from effects array - find its index first
+                 const index = effects.findIndex(eff => eff.element === particle);
+                 if (index > -1) effects.splice(index, 1);
+                activeTimeouts.delete(cleanupTimer);
+            }, duration * 1000 + 50); // Add small buffer for transition end
+             activeTimeouts.add(cleanupTimer);
+        }
+    }
+
+    function createBossExplosionEffect(centerX, centerY) {
+         // More particles for boss
+         for (let i = 0; i < 30; i++) {
+              createExplosionEffect(
+                  centerX + (Math.random() - 0.5) * BOSS_CONFIG.width * 0.8,
+                  centerY + (Math.random() - 0.5) * BOSS_CONFIG.height * 0.8
+              );
+         }
+         // Add a screen shake for boss death
+         applyScreenShake(15, 500); // Stronger shake
+    }
+
+
+    function createShipDamageEffect() {
+        // Flash ship red (using filter) only if powerup is not active
+        if (spaceship && weaponCooldown === BASE_WEAPON_COOLDOWN) {
+            spaceship.style.filter = 'brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(5)'; // Reddish flash
+            const filterTimeout = setTimeout(() => {
+                // Check if ship still exists
+                 if (spaceship) spaceship.style.filter = '';
+                 activeTimeouts.delete(filterTimeout);
+            }, 150);
+            activeTimeouts.add(filterTimeout);
+        } else if (spaceship) {
+             // If powerup IS active, maybe just a quick brightness flash?
+             const originalFilter = spaceship.style.filter;
+             spaceship.style.filter = `${originalFilter} brightness(2.0)`;
+              const flashTimeout = setTimeout(() => {
+                 // Check if ship still exists
+                  if (spaceship) spaceship.style.filter = originalFilter; // Restore powerup glow
+                  activeTimeouts.delete(flashTimeout);
+             }, 100);
+             activeTimeouts.add(flashTimeout);
+        }
+
+
+        // Screen shake
+        applyScreenShake(8, 200); // Moderate shake, short duration
+    }
+
+    function applyScreenShake(intensity, duration) {
+         if (isPaused) return; // Don't shake if paused
+
+         const startTime = Date.now();
+         let shakeId = null;
+
+         function shakeStep() {
+             const elapsed = Date.now() - startTime;
+             if (elapsed >= duration || isPaused) { // Stop if duration passed or game paused
+                 gameContainer.style.transform = 'translate(0, 0)';
+                 // Don't cancel frame if paused, let it resume naturally
+                 if (elapsed >= duration && shakeId) cancelAnimationFrame(shakeId); // Cancel only if finished
+                 shakeId = null; // Ensure ID is cleared
+                 return;
+             }
+             const progress = 1 - (elapsed / duration); // Decrease intensity over time
+             const x = (Math.random() - 0.5) * 2 * intensity * progress;
+             const y = (Math.random() - 0.5) * 2 * intensity * progress;
+             gameContainer.style.transform = `translate(${x}px, ${y}px)`;
+             shakeId = requestAnimationFrame(shakeStep);
+         }
+         // Cancel any existing shake before starting a new one
+         // This is tricky without storing the ID globally. A simpler approach
+         // might be acceptable where shakes can briefly overlap.
+         // if (shakeId) cancelAnimationFrame(shakeId); // Potential issue if called rapidly
+         shakeId = requestAnimationFrame(shakeStep);
+    }
+
+     function createLaserHitEffect(x, y) {
+         const flash = document.createElement('div');
+         flash.className = 'laser-hit-flash';
+         flash.style.left = `${x - 15}px`; // Center the flash (adjust size)
+         flash.style.top = `${y - 15}px`; // Center the flash (adjust size)
+         gameContainer.appendChild(flash);
+         effects.push({ element: flash }); // Track effect
+
+         const cleanupTimer = setTimeout(() => {
+              // Check if flash still exists before removing
+             if (flash.parentNode === gameContainer) {
+                flash.remove();
+             }
+             const index = effects.findIndex(eff => eff.element === flash);
+             if (index > -1) effects.splice(index, 1);
+             activeTimeouts.delete(cleanupTimer);
+         }, 200); // Match animation duration
+         activeTimeouts.add(cleanupTimer);
+     }
+
+      function createPowerUpCollectEffect(x, y) {
+         const ring = document.createElement('div');
+         ring.className = 'powerup-collect-effect';
+         ring.style.left = `${x - 25}px`; // Center the effect
+         ring.style.top = `${y - 25}px`;
+         gameContainer.appendChild(ring);
+         effects.push({ element: ring });
+
+         const cleanupTimer = setTimeout(() => {
+             // Check if ring still exists before removing
+             if (ring.parentNode === gameContainer) {
+                 ring.remove();
+             }
+             const index = effects.findIndex(eff => eff.element === ring);
+             if (index > -1) effects.splice(index, 1);
+             activeTimeouts.delete(cleanupTimer);
+         }, 500); // Match animation duration
+          activeTimeouts.add(cleanupTimer);
+     }
+
+     function updateEffects() {
+         // Primarily used for cleanup in case timeouts fail, but effects are mostly CSS driven
+     }
+
+      function clearEffects() {
+         effects.forEach(effect => {
+             if(effect.element && effect.element.parentNode === gameContainer) {
+                 effect.element.remove();
+             }
+         });
+         effects = [];
+          // Clear any related timeouts tracked separately if needed
+          // (Timeouts are already cleared in resetGame via activeTimeouts set)
+     }
+
+
+    // --- Utilities ---
+
+    function updateHUD() {
+        hudScore.textContent = `Score: ${score}`;
+        afsprakennotasElement.textContent = afsprakennotasCount;
+        inmengingenElement.textContent = inmengingenCount;
+        meldingenElement.textContent = meldingenCount;
+         // Format totalCount to always show one decimal place if not an integer
+        totalCounterElement.textContent = `${totalCount % 1 === 0 ? totalCount : totalCount.toFixed(1)}/${MAX_DEDUCTIONS}`;
+        subsidiestopElement.textContent = `${subsidiestopCounter}%`;
+    }
+
+    function playSound(soundId) {
+        if (soundMuted) return;
+        const sound = document.getElementById(soundId);
+        if (sound) {
+            // Don't reset time if already playing (allows overlapping sounds like rapid hits)
+            // unless it's a sound that shouldn't overlap much (like explosion)
+            if (soundId === 'explosion-sound' || soundId === 'bigexplosion-sound' || soundId === 'alarm-sound' || soundId === 'loser-sound' || soundId === 'powerup-sound' || sound.paused) {
+                 sound.currentTime = 0;
+            }
+            // Adjust volumes per sound type
+            let volume = 0.8;
+            if (soundId === 'laser-sound') volume = 0.5;
+            else if (soundId === 'hit-sound') volume = 0.6;
+            else if (soundId === 'explosion-sound') volume = 0.6;
+            else if (soundId === 'alarm-sound') volume = 0.5;
+            sound.volume = volume;
+
+            sound.play().catch(e => {
+                 // Ignore errors often caused by rapid plays before previous finished loading/playing
+                 // console.warn(`Sound play failed for ${soundId}:`, e);
+                 });
+        } else {
+             console.warn(`Sound element not found: ${soundId}`);
+        }
+    }
+
+    // --- Music Specific Functions ---
+
+    function handleMusicSelectionChange(event) {
+        const selectedValue = event.target.value;
+        console.log("Music selection changed to:", selectedValue);
+
+        // Stop any previous preview and clear its timer
+        stopMusicPreview();
+        isPlayAllActive = false; // Changing selection cancels play all mode
+        backgroundMusicPlayer.loop = false; // Ensure loop is off unless play all re-enables it indirectly
+
+        currentMusicSelection = selectedValue; // Store the *intended* selection
+
+        if (selectedValue === 'all') {
+            // Don't start playing on selection, wait for game start or save?
+            // Or maybe start previewing the first track? Let's just set the state.
+            console.log("'Play All' selected. Mode will activate on game start/save.");
+            backgroundMusicPlayer.pause(); // Ensure player is stopped
+            backgroundMusicPlayer.currentTime = 0;
+        } else if (selectedValue) {
+            // Start preview for a specific track
+            isPreviewingMusic = true;
+            backgroundMusicPlayer.src = selectedValue;
+            console.log(`Starting preview for ${selectedValue}`);
+            if (!soundMuted) {
+                backgroundMusicPlayer.play().catch(e => console.warn("Preview play failed:", e));
+            }
+            // Set timer to stop preview
+            previewTimeoutId = setTimeout(() => {
+                console.log(`Preview ended for ${selectedValue}`);
+                stopMusicPreview();
+            }, MUSIC_PREVIEW_DURATION);
+             activeTimeouts.add(previewTimeoutId); // Track timeout
+        }
+    }
+
+     function stopMusicPreview() {
+         if (isPreviewingMusic) {
+             console.log("Stopping music preview.");
+             clearTimeout(previewTimeoutId);
+             activeTimeouts.delete(previewTimeoutId); // Untrack timeout
+             previewTimeoutId = null;
+             isPreviewingMusic = false;
+             if (!isPlayAllActive) { // Don't stop if play all mode is supposed to be running
+                 backgroundMusicPlayer.pause();
+                 backgroundMusicPlayer.currentTime = 0;
+             }
+         }
+     }
+
+      function handleTrackEnd() {
+         // This is called when a track finishes playing naturally
+         if (isPlayAllActive && !isPaused && isGameRunning && !isGameOver) {
+              console.log(`Track ended in 'Play All' mode. Current index: ${playAllIndex}`);
+              playAllIndex++;
+              if (playAllIndex >= musicTracks.length) {
+                  playAllIndex = 0; // Loop back to the beginning
+                  console.log("Looping 'Play All' back to start.");
+              }
+              backgroundMusicPlayer.src = musicTracks[playAllIndex];
+              console.log(`Playing next track: ${musicTracks[playAllIndex]}`);
+              if (!soundMuted) {
+                  // Small delay before playing next track? Optional.
+                  setTimeout(() => {
+                      if (isPlayAllActive && !soundMuted) { // Check again in case state changed during delay
+                           backgroundMusicPlayer.play().catch(e => console.warn("Play All next track failed:", e));
+                      }
+                  }, 100); // 100ms delay
+              }
+          } else {
+              // If not in play all mode, loop the single track if the loop attribute is set
+              // The loop attribute is managed by playBackgroundMusic()
+              console.log("Track ended, loop status:", backgroundMusicPlayer.loop);
+          }
+     }
+
+     function playBackgroundMusic() {
+         if (soundMuted || isPreviewingMusic) return; // Don't play if muted or previewing
+
+         console.log(`playBackgroundMusic called. Selection: ${currentMusicSelection}`);
+
+         // *** ADD THIS LINE: Reset volume before playing ***
+         backgroundMusicPlayer.volume = 1.0; // Set to your desired default volume
+
+         if (currentMusicSelection === 'all') {
+             isPlayAllActive = true;
+             backgroundMusicPlayer.loop = false; // Loop is handled manually by 'ended' event
+             // Start from the beginning on game start/restart.
+             playAllIndex = 0;
+             if (musicTracks.length > 0) {
+                 // Ensure src is correct, especially if paused
+                 if (backgroundMusicPlayer.currentSrc !== musicTracks[playAllIndex] || backgroundMusicPlayer.paused) {
+                    if(backgroundMusicPlayer.currentSrc !== musicTracks[playAllIndex]) {
+                        backgroundMusicPlayer.src = musicTracks[playAllIndex];
+                    }
+                     console.log(`Starting 'Play All' with: ${musicTracks[playAllIndex]}`);
+                     backgroundMusicPlayer.play().catch(e => console.warn("Play All start failed:", e));
+                 }
+             } else {
+                  console.warn("Play All selected, but no music tracks found!");
+             }
+         } else {
+             isPlayAllActive = false;
+             backgroundMusicPlayer.loop = true; // Loop single tracks
+             const intendedSrc = currentMusicSelection;
+             // Check if src needs updating OR if it's paused
+             if (backgroundMusicPlayer.currentSrc !== intendedSrc || backgroundMusicPlayer.paused) {
+                  // Ensure src is correct even if paused
+                  if(backgroundMusicPlayer.currentSrc !== intendedSrc) {
+                      backgroundMusicPlayer.src = intendedSrc;
+                  }
+                  console.log(`Playing single track: ${intendedSrc}`);
+                 backgroundMusicPlayer.play().catch(e => console.warn("Single track play failed:", e));
+             }
+         }
+     }
+
+      function fadeOutAudio(audioElement, duration) {
+         // ** Stop Play All logic when fading out music **
+         // (Unless it's just a temporary fade like pause?) - Let's stop it fully on game over/exit.
+         // Keep track if fade was initiated by game end/exit vs pause
+         // --> Handled in gameOver and exitToMenu setting isPlayAllActive = false
+
+         if (!audioElement || audioElement.paused || soundMuted) {
+             if (audioElement && !soundMuted) {
+                  audioElement.pause(); // Ensure paused
+                  // Don't reset currentTime here, might interfere with resume
+             }
+             return Promise.resolve(); // Return a resolved promise
+         }
+
+         return new Promise((resolve) => {
+             const startVolume = audioElement.volume;
+             const fadeStartTime = performance.now(); // Use performance.now for accuracy
+             let fadeAnimFrame;
+
+             function fadeStep(now) {
+                 const elapsed = now - fadeStartTime;
+                 const progress = Math.min(elapsed / duration, 1);
+                 let newVolume = startVolume * (1 - progress);
+
+                 if (newVolume <= 0.01 || soundMuted || !audioElement.src) { // Also check if src is gone
+                     newVolume = 0; // Ensure it hits zero
+                     audioElement.volume = newVolume;
+                     audioElement.pause();
+                    //  audioElement.volume = startVolume; // Reset volume for next time? NO - could cause issues if played right after. Reset volume on *play*.
+                     if (fadeAnimFrame) cancelAnimationFrame(fadeAnimFrame);
+                     fadeAnimFrame = null;
+                     resolve(); // Resolve the promise when done
+                 } else {
+                     audioElement.volume = newVolume;
+                     fadeAnimFrame = requestAnimationFrame(fadeStep);
+                 }
+             }
+             fadeAnimFrame = requestAnimationFrame(fadeStep);
+         });
+     }
+
+    function toggleSound() {
+        soundMuted = !soundMuted;
+        soundToggle.style.backgroundImage = `url('Images/${soundMuted ? 'speaker' : 'speakeron'}.png')`; // Corrected names
+        console.log("Sound Muted:", soundMuted);
+
+        // Mute/unmute all audio elements controlled by the game
+        const gameAudios = [
+            document.getElementById('laser-sound'),
+            document.getElementById('explosion-sound'),
+            document.getElementById('alarm-sound'),
+            document.getElementById('bigexplosion-sound'),
+            document.getElementById('loser-sound'),
+            document.getElementById('powerup-sound'),
+            document.getElementById('hit-sound'),
+            backgroundMusicPlayer // Include background music player
+        ];
+        gameAudios.forEach(audio => {
+            if (audio) audio.muted = soundMuted;
+        });
+
+        // Handle background music state
+        if (soundMuted) {
+            // If muted, pause the background music immediately (no fade needed for mute toggle)
+            backgroundMusicPlayer.pause();
+        } else {
+            // If unmuted, resume ONLY if game is running/paused or play all is active
+             // And NOT during preview
+            if (!isPreviewingMusic && (isGameRunning || isPaused || isPlayAllActive)) {
+                 // Ensure src is correct before playing, especially for playAll
+                 if (isPlayAllActive && musicTracks.length > 0) {
+                     if (backgroundMusicPlayer.currentSrc !== musicTracks[playAllIndex]) {
+                         backgroundMusicPlayer.src = musicTracks[playAllIndex];
+                     }
+                 } else if (!isPlayAllActive && currentMusicSelection !== 'all') {
+                      if (backgroundMusicPlayer.currentSrc !== currentMusicSelection) {
+                           backgroundMusicPlayer.src = currentMusicSelection;
+                      }
+                 }
+                 // Only play if it was actually supposed to be playing
+                 if (isGameRunning || isPlayAllActive) { // Don't auto-play if just paused on start screen etc.
+                    backgroundMusicPlayer.play().catch(e => console.warn("Resume music on unmute failed:", e));
+                 }
+            }
+            // If unmuting during preview, the preview logic should handle playback if needed.
+            else if (isPreviewingMusic) {
+                // Re-trigger play for preview if it was paused by mute
+                backgroundMusicPlayer.play().catch(e => console.warn("Resume preview on unmute failed:", e));
+            }
+        }
+    }
+
+
+    function loadSettings() {
+        // Load speed
+        gameSpeed = localStorage.getItem('digiDefenderGameSpeed') || 'normal';
+        document.querySelectorAll('.speed-option').forEach(opt => {
+            opt.classList.toggle('selected', opt.dataset.speed === gameSpeed);
+        });
+
+        // Load music choice
+        currentMusicSelection = localStorage.getItem('digiDefenderBackgroundMusic') || 'Audio/8bitarcade.mp3';
+        if (backgroundMusicSelect) {
+             backgroundMusicSelect.value = currentMusicSelection;
+        }
+        isPlayAllActive = (currentMusicSelection === 'all'); // Set play all state based on loaded pref
+        // Don't set player src here, let playBackgroundMusic handle it.
+
+        // Load sound muted state
+         const savedMuteState = localStorage.getItem('digiDefenderSoundMuted');
+         if (savedMuteState !== null) {
+             const shouldBeMuted = savedMuteState === 'true';
+             if (shouldBeMuted !== soundMuted) { // Only toggle if state needs changing
+                 toggleSound();
+             }
+         }
+    }
+
+    function saveSettings() {
+        // Stop any active preview before saving
+         stopMusicPreview();
+
+        // Save speed
+        const selectedSpeedElement = document.querySelector('.speed-option.selected');
+        if (selectedSpeedElement) {
+             gameSpeed = selectedSpeedElement.dataset.speed;
+             localStorage.setItem('digiDefenderGameSpeed', gameSpeed);
+        }
+
+        // Save music
+        if (backgroundMusicSelect) {
+            currentMusicSelection = backgroundMusicSelect.value; // Update state from selection
+            localStorage.setItem('digiDefenderBackgroundMusic', currentMusicSelection);
+            isPlayAllActive = (currentMusicSelection === 'all'); // Update play all state
+
+            // Stop player completely before potentially changing src or mode
+            backgroundMusicPlayer.pause();
+            backgroundMusicPlayer.currentTime = 0;
+
+            // If game is somehow running in background while settings open, update music
+            if (!soundMuted && isGameRunning && !isPaused) {
+                 playBackgroundMusic(); // Restart music based on new selection
+            }
+        }
+
+        // Save sound muted state
+         localStorage.setItem('digiDefenderSoundMuted', soundMuted);
+
+         showScreen('start'); // Go back to start screen after saving
+    }
+
+    // --- Mobile Controls ---
+    function setupMobileControls() {
+        // Use a more robust check for touch capability
+        const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+        // Also consider screen size, as some touch laptops are large
+        const isLikelyMobile = isTouchDevice && (window.innerWidth < 1024);
+
+        const mobileControls = document.getElementById('mobile-controls');
+
+        if (isLikelyMobile) {
+            console.log("Mobile controls enabled.");
+            mobileControls.style.display = 'block'; // Show controls
+
+            const buttons = {
+                left: document.getElementById('mobile-left'),
+                right: document.getElementById('mobile-right'),
+                up: document.getElementById('mobile-up'),
+                down: document.getElementById('mobile-down'),
+                fire: document.getElementById('mobile-fire')
+            };
+
+            // Keep track of active touches per button
+            const activeTouches = {}; // { buttonId: touchIdentifier, ... }
+
+            const handleTouchStart = (e) => {
+                 e.preventDefault(); // Prevent default touch actions (scrolling, zoom)
+                 if (!isGameRunning || isPaused || isGameOver) return;
+
+                 // Process all new touches in this event
+                 for (let i = 0; i < e.changedTouches.length; i++) {
+                     const touch = e.changedTouches[i];
+                     const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                     const targetButton = targetElement ? targetElement.closest('.mobile-button') : null;
+
+                     if (targetButton && !Object.values(activeTouches).includes(touch.identifier)) { // Check if touch ID is already active for *any* button
+                          let buttonId = targetButton.id;
+                          activeTouches[buttonId] = touch.identifier; // Store touch ID associated with this button
+
+                         isMoving = true; // Assume movement unless it's fire
+                         switch (buttonId) {
+                             case 'mobile-left': moveInput.x = -1; break;
+                             case 'mobile-right': moveInput.x = 1; break;
+                             case 'mobile-up': moveInput.y = -1; break;
+                             case 'mobile-down': moveInput.y = 1; break;
+                             case 'mobile-fire':
+                                 isShootingInput = true;
+                                 tryToShoot(); // Shoot immediately
+                                 isMoving = false; // Fire isn't movement
+                                 break;
+                         }
+                         if (buttonId !== 'mobile-fire') {
+                             updatePropellantAnimation();
+                         }
+                     }
+                 }
+            };
+
+            const handleTouchEnd = (e) => {
+                 e.preventDefault();
+                 // No need to check game state here, just process ended touches
+
+                 // Process all touches that ended in this event
+                 for (let i = 0; i < e.changedTouches.length; i++) {
+                     const touch = e.changedTouches[i];
+
+                     // Find which button this touch identifier was associated with
+                     let releasedButtonId = null;
+                     for (const buttonId in activeTouches) {
+                         if (activeTouches[buttonId] === touch.identifier) {
+                             releasedButtonId = buttonId;
+                             delete activeTouches[buttonId]; // Remove from active touches
+                             break;
+                         }
+                     }
+
+                     if (releasedButtonId) {
+                         switch (releasedButtonId) {
+                             case 'mobile-left': if (moveInput.x < 0) moveInput.x = 0; break;
+                             case 'mobile-right': if (moveInput.x > 0) moveInput.x = 0; break;
+                             case 'mobile-up': if (moveInput.y < 0) moveInput.y = 0; break;
+                             case 'mobile-down': if (moveInput.y > 0) moveInput.y = 0; break;
+                             case 'mobile-fire': isShootingInput = false; break;
+                         }
+                     }
+                 }
+
+                // Update moving state only after processing all ended touches
+                 // Check if *any* movement button is still held by another touch
+                 let stillMovingX = false;
+                 let stillMovingY = false;
+                 for (const buttonId in activeTouches) {
+                    if (buttonId === 'mobile-left' || buttonId === 'mobile-right') stillMovingX = true;
+                    if (buttonId === 'mobile-up' || buttonId === 'mobile-down') stillMovingY = true;
+                 }
+                 // Only reset input axis if no button controlling it is active
+                 if (!stillMovingX) moveInput.x = 0;
+                 if (!stillMovingY) moveInput.y = 0;
+
+                isMoving = moveInput.x !== 0 || moveInput.y !== 0;
+                updatePropellantAnimation();
+            };
+
+             // Use touchstart and touchend for discrete buttons
+             mobileControls.addEventListener('touchstart', handleTouchStart, { passive: false });
+             mobileControls.addEventListener('touchend', handleTouchEnd, { passive: false });
+             mobileControls.addEventListener('touchcancel', handleTouchEnd, { passive: false }); // Treat cancel like end
+
+        } else {
+            mobileControls.style.display = 'none'; // Hide on desktop
+        }
+    }
+
+     // --- Pause ---
+     function togglePause() {
+        if (!isGameRunning || isGameOver) return;
+
+        isPaused = !isPaused;
+        console.log("Game Paused:", isPaused);
+
+        if (isPaused) {
+             // Pause music (no fade needed for pause)
+             backgroundMusicPlayer.pause();
+
+             // Stop screen shake if active
+             gameContainer.style.transform = 'translate(0, 0)'; // Reset position
+
+            // Create and show pause screen
+            let pauseScreen = document.getElementById('pause-screen');
+            if (!pauseScreen) {
+                pauseScreen = document.createElement('div');
+                pauseScreen.id = 'pause-screen';
+                // Styles applied via CSS
+                pauseScreen.innerHTML = `
+                    <h2>GAME PAUSED</h2>
+                    <p>Press ESC or P to resume</p>
+                    <div>
+                        <button id="resume-game-btn">Resume Game</button> <!-- Changed ID slightly -->
+                        <button id="exit-to-menu-btn">Exit to Menu</button> <!-- Changed ID slightly -->
+                    </div>
+                `;
+                gameContainer.appendChild(pauseScreen);
+                 // Add listeners only once
+                 document.getElementById('resume-game-btn').addEventListener('click', togglePause);
+                 document.getElementById('exit-to-menu-btn').addEventListener('click', exitToMenu); // Use the correct exit function
+            }
+             pauseScreen.style.display = 'flex'; // Ensure visible
+        } else {
+             // Resume music (if not muted and was playing)
+             if (!soundMuted && (isPlayAllActive || currentMusicSelection !== 'all')) { // Check if music should be playing
+                  backgroundMusicPlayer.play().catch(e => console.warn("Resume music on unpause failed:", e));
+             }
+
+             // Hide pause screen
+             const pauseScreen = document.getElementById('pause-screen');
+             if (pauseScreen) pauseScreen.style.display = 'none';
+
+              // If weapon was recharging, ensure bar visually updates and timer continues
+              if (!canShoot && weaponRechargeTimeoutId) {
+                  // Calculate remaining time accurately BEFORE pause
+                  // This requires storing the pause start time and calculating elapsed on resume
+                  // Simpler: Restart the visual animation based on current canShoot status
+                  const timeSinceShot = Date.now() - lastShootTime;
+                  const timeRemaining = weaponCooldown - timeSinceShot;
+
+                  if (timeRemaining > 0) {
+                       const progress = Math.max(0, timeSinceShot / weaponCooldown);
+                       weaponChargeBar.style.width = `${progress * 100}%`;
+                       // Restart visual animation for the remaining duration
+                       animateWeaponRecharge(timeRemaining);
+
+                       // Clear old timeout and set a new one for the remaining time
+                       clearTimeout(weaponRechargeTimeoutId);
+                       activeTimeouts.delete(weaponRechargeTimeoutId);
+                       weaponRechargeTimeoutId = setTimeout(() => {
+                           canShoot = true;
+                           if (!isPaused) weaponChargeBar.style.width = '100%'; // Update bar if still not paused
+                           activeTimeouts.delete(weaponRechargeTimeoutId);
+                       }, timeRemaining);
+                       activeTimeouts.add(weaponRechargeTimeoutId);
+
+                  } else {
+                       // Should have already become true, but double check
+                       canShoot = true;
+                       weaponChargeBar.style.width = '100%';
+                  }
+              } else if (canShoot) {
+                   weaponChargeBar.style.width = '100%'; // Ensure bar is full if ready
+              }
+
+             // Resume other timers/animations if necessary (more complex state management)
+             // The game loop handles resuming movement/updates automatically.
+        }
+    }
+
+    // --- Leaderboard ---
+    function saveHighScore(finalScore) {
+        try {
+            const highScores = JSON.parse(localStorage.getItem('digiDefenderHighScores') || '[]');
+            const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+            highScores.push({ score: finalScore, date: currentDate });
+            highScores.sort((a, b) => b.score - a.score); // Sort descending by score
+
+            const topScores = highScores.slice(0, 5); // Keep top 5
+
+            localStorage.setItem('digiDefenderHighScores', JSON.stringify(topScores));
+            console.log("High score saved:", topScores);
+            return topScores;
+        } catch (error) {
+            console.error("Failed to save high score:", error);
+            return [];
+        }
+    }
+
+     function showLeaderboard() {
+         populateLeaderboard(); // Populate content first
+         showScreen('leaderboard'); // Then show the screen
+     }
+
+
+    function populateLeaderboard() {
+        const leaderboardContent = document.querySelector('#leaderboard-screen .leaderboard-content');
+        if (!leaderboardContent) return;
+
+        try {
+            const highScores = JSON.parse(localStorage.getItem('digiDefenderHighScores') || '[]');
+            let tableHTML = '';
+
+            if (highScores.length === 0) {
+                tableHTML = `<p class="no-scores">No high scores yet!</p>`;
+            } else {
+                tableHTML = `
+                    <table>
+                        <tr><th>#</th><th>Score</th><th>Date</th></tr>
+                 `;
+                highScores.forEach((entry, index) => {
+                     // Basic input sanitization example (more robust needed for user input)
+                     const safeScore = Number(entry.score) || 0;
+                     const safeDate = String(entry.date || '').replace(/</g, "&lt;"); // Prevent basic HTML injection
+                    tableHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${safeScore}</td>
+                            <td>${safeDate}</td>
+                        </tr>
+                    `;
+                });
+                tableHTML += `</table>`;
+            }
+            leaderboardContent.innerHTML = tableHTML;
+        } catch (error) {
+             console.error("Failed to load or parse high scores:", error);
+             leaderboardContent.innerHTML = `<p class="no-scores">Error loading scores.</p>`;
+        }
+    }
+
+
+</script>
+</body>
+</html>
