@@ -504,9 +504,9 @@
             animation: float 2s infinite alternate ease-in-out, powerUpGlowOrange 1.5s infinite; /* Use existing float + new orange glow */
         }
          @keyframes powerUpGlowOrange {
-             0% { filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.7)); }
-             50% { filter: drop-shadow(0 0 25px rgba(255, 165, 0, 1.0)); }
-             100% { filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.7)); }
+             0% { filter: drop-shadow(0 0 10px rgba(0, 230, 0, 0.7)); }
+             50% { filter: drop-shadow(0 0 25px rgba(0, 230, 0, 1.0)); }
+             100% { filter: drop-shadow(0 0 10px rgba(0, 230, 0, 0.7)); }
          }
 
 
@@ -1068,7 +1068,7 @@
     <audio id="hit-sound" src="Audio/hit.mp3" preload="auto"></audio> <!-- Added generic hit sound -->
     <!-- START: New Sounds -->
     <audio id="double-laser-sound" src="Audio/laser.mp3" preload="auto"></audio> <!-- Can reuse laser or use a new one -->
-    <audio id="laser-bomb-sound" src="Audio/bomb_launch.mp3" preload="auto"></audio> <!-- Needs Audio/bomb_launch.mp3 -->
+    <audio id="laser-bomb-sound" src="Audio/laser.mp3" preload="auto"></audio> <!-- Needs Audio/bomb_launch.mp3 -->
     <audio id="bomb-explosion-sound" src="Audio/bomb_explode.mp3" preload="auto"></audio> <!-- Needs Audio/bomb_explode.mp3 -->
     <!-- END: New Sounds -->
 
@@ -2404,7 +2404,7 @@
          bossEnemy.health -= (1 * damageMultiplier); // Apply multiplier
          // Play sound only on actual damage
          if (bossEnemy.health + damageMultiplier > 0) {
-            playSound('hit-sound'); // Generic hit
+            playSound('no sound necessary'); // Generic hit
          }
 
         // Update health bar visually
