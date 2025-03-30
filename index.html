@@ -477,20 +477,49 @@
              width: 48px;
              height: 48px;
              display: none; /* Start hidden */
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.8));
-            animation: float 2s infinite alternate ease-in-out, powerUpGlow 1.5s infinite;
+            /* filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.8)); */ /* Base filter removed, handled by type classes */
+            /* animation: float 2s infinite alternate ease-in-out, powerUpGlow 1.5s infinite; */ /* Base animation removed */
             z-index: 8; /* Above most things */
         }
 
+        /* Base float animation */
         @keyframes float {
             from { transform: translateY(0) rotate(-5deg); }
             to { transform: translateY(-12px) rotate(5deg); }
         }
-        @keyframes powerUpGlow {
+
+        /* --- START: New Power-up Glow Styles --- */
+        #power-up-image.rapid { /* Existing blue/cyan glow */
+            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.8));
+            animation: float 2s infinite alternate ease-in-out, powerUpGlow 1.5s infinite; /* Use existing float + blue glow */
+        }
+         @keyframes powerUpGlow { /* Keep original blue glow animation */
              0% { filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6)); }
              50% { filter: drop-shadow(0 0 25px rgba(0, 255, 255, 1.0)); }
              100% { filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6)); }
          }
+
+        #power-up-image.double { /* Orange Glow */
+            filter: drop-shadow(0 0 15px rgba(255, 165, 0, 0.9));
+            animation: float 2s infinite alternate ease-in-out, powerUpGlowOrange 1.5s infinite; /* Use existing float + new orange glow */
+        }
+         @keyframes powerUpGlowOrange {
+             0% { filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.7)); }
+             50% { filter: drop-shadow(0 0 25px rgba(255, 165, 0, 1.0)); }
+             100% { filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.7)); }
+         }
+
+
+        #power-up-image.bomb { /* Yellow Glow */
+            filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.9));
+            animation: float 2s infinite alternate ease-in-out, powerUpGlowYellow 1.5s infinite; /* Use existing float + new yellow glow */
+        }
+         @keyframes powerUpGlowYellow {
+             0% { filter: drop-shadow(0 0 10px rgba(255, 255, 0, 0.7)); }
+             50% { filter: drop-shadow(0 0 25px rgba(255, 255, 0, 1.0)); }
+             100% { filter: drop-shadow(0 0 10px rgba(255, 255, 0, 0.7)); }
+         }
+        /* --- END: New Power-up Glow Styles --- */
 
         /* Powerup collected effect */
         .powerup-collect-effect {
@@ -508,6 +537,42 @@
              from { transform: scale(1); opacity: 0.8; }
              to { transform: scale(4); opacity: 0; }
          }
+
+        /* --- START: Laser Bomb Style --- */
+        .laser-bomb {
+            position: absolute;
+            width: 20px; /* Wider */
+            height: 35px; /* Slightly longer */
+            background: linear-gradient(to bottom, #ffffcc, #ffeb3b, #ffc107); /* Yellowish gradient */
+            border-radius: 50% 50% 10px 10px; /* Rounded top, flatter bottom */
+            box-shadow: 0 0 15px #ff0, 0 0 25px #ff0, 0 0 8px #fff; /* Intense yellow glow */
+            z-index: 5;
+            animation: bombPulse 0.3s infinite alternate;
+        }
+
+        @keyframes bombPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.08); }
+        }
+
+        /* --- START: Bomb Explosion Effect --- */
+        .bomb-explosion-flash {
+            position: absolute;
+            width: 60px; /* Larger flash */
+            height: 60px;
+            background: radial-gradient(circle, rgba(255, 255, 100, 0.9) 0%, rgba(255, 200, 0, 0) 70%);
+            border-radius: 50%;
+            z-index: 6;
+            pointer-events: none;
+            animation: flashFadeLarge 0.25s ease-out forwards;
+        }
+
+        @keyframes flashFadeLarge {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(2.0); opacity: 0; }
+        }
+        /* --- END: Bomb Explosion Effect --- */
+
 
         /* Boss Styles */
         #boss-image {
@@ -934,7 +999,11 @@
                 <p>Gebruik <strong>Pijltjestoetsen</strong> of <strong>ZQSD</strong> om te bewegen.</p>
                 <p>Gebruik <strong>ESC</strong> om het spel te pauzeren.</p>
                 <p>Gebruik <strong>Spatiebalk</strong> om te schieten.</p>
-                <p>Pak een <strong>Digipunt Power-up</strong> ( <img src="Images/digi48.png" style="width:20px; height:20px; vertical-align: middle;"> ) voor <strong>6 seconden</strong> sneller vuren.</p>
+                <p>Pak een <strong>Digipunt Power-up</strong> ( <img src="Images/digi48.png" style="width:20px; height:20px; vertical-align: middle;"> ):<br>
+                   - <strong style="color:#0ff;">Snel Vuren (Cyaan):</strong> Vuurt <strong>sneller</strong> gedurende 8 seconden.<br>
+                   - <strong style="color:#FFA500;">Dubbel Schot (Oranje):</strong> Vuurt <strong>twee lasers</strong> tegelijk gedurende 8 seconden.<br>
+                   - <strong style="color:#FF0;">Laser Bom (Geel):</strong> Vuurt <strong>langzame bommen</strong> die <strong>meer schade</strong> doen gedurende 8 seconden.
+                </p>
                 <p>Raak <strong>Instanties</strong> ( <img src="Images/d0948.png" style="width:20px; height:20px; vertical-align: middle;"> ) om ze te vernietigen. <br> Elke vernietigde <strong>Instantie</strong> ontploft in verschillende <strong>Controleurs</strong>  die zich verspreiden.</p>
                 <p>Elke <strong>Instantie</strong> die je rakket raakt of  de bodem bereikt, geeft: <strong>1 klacht</strong>. <br> Elke <strong>Controleur</strong> die je rakket raakt geeft een waarschuwing: <strong>0.5 klacht</strong>.</p>
                 <p>Bij <strong>10 totale klachten</strong> wordt je Digipunt gesloten (Game Over).</p>
@@ -997,6 +1066,11 @@
     <audio id="loser-sound" src="Audio/loser.mp3" preload="auto"></audio>
     <audio id="powerup-sound" src="Audio/powerup.mp3" preload="auto"></audio>
     <audio id="hit-sound" src="Audio/hit.mp3" preload="auto"></audio> <!-- Added generic hit sound -->
+    <!-- START: New Sounds -->
+    <audio id="double-laser-sound" src="Audio/laser.mp3" preload="auto"></audio> <!-- Can reuse laser or use a new one -->
+    <audio id="laser-bomb-sound" src="Audio/bomb_launch.mp3" preload="auto"></audio> <!-- Needs Audio/bomb_launch.mp3 -->
+    <audio id="bomb-explosion-sound" src="Audio/bomb_explode.mp3" preload="auto"></audio> <!-- Needs Audio/bomb_explode.mp3 -->
+    <!-- END: New Sounds -->
 
 
     <!-- Background Music Player -->
@@ -1042,8 +1116,8 @@
     const LASER_HEIGHT = 25;
     const LASER_SPEED = 12;
     const BASE_WEAPON_COOLDOWN = 180; // Slightly slower base cooldown
-    const POWERUP_WEAPON_COOLDOWN = 60; // Faster powerup cooldown
-    const POWERUP_DURATION = 6000; // 6 seconds
+    const POWERUP_WEAPON_COOLDOWN = 60; // Faster powerup cooldown (for rapid fire)
+    const POWERUP_DURATION = 8000; // Increase duration slightly to 8 seconds for all powerups
     const POWERUP_SPAWN_INTERVAL = 25000; // 25 seconds
     const BOSS_SPAWN_SCORE_THRESHOLD = 0; // Score needed for boss possibility
     const BOSS_SPAWN_CHECK_INTERVAL = 120000; // Check every 120 seconds after threshold
@@ -1051,6 +1125,12 @@
     const MAX_DEDUCTIONS = 10;
     const STARFIELD_SCROLL_SPEED = 0.3; // Pixels per frame
     const MUSIC_PREVIEW_DURATION = 20000; // 20 seconds for preview
+    const LASER_BOMB_SPEED = 8; // Slower than normal laser
+    const LASER_BOMB_WIDTH = 20;
+    const LASER_BOMB_HEIGHT = 35;
+    const LASER_BOMB_DAMAGE_MULTIPLIER = 3;
+    const DOUBLE_SHOT_SPACING = 25; // Horizontal space between double shots
+    const POWERUP_TYPES = ['rapid', 'double', 'bomb']; // Define the types
 
     const MOVEMENT_CONFIG = {
         slow: { baseSpeed: 10, acceleration: 0.7, maxSpeed: 9, friction: 0.88 },
@@ -1092,7 +1172,7 @@
     let isGameRunning = false;
     let isPaused = false;
     let canShoot = true;
-    let weaponCooldown = BASE_WEAPON_COOLDOWN;
+    let weaponCooldown = BASE_WEAPON_COOLDOWN; // Base cooldown, overridden by powerup timer
     let gameSpeed = 'normal';
     let soundMuted = false;
     let lastShootTime = 0;
@@ -1107,8 +1187,7 @@
     let isPlayAllActive = false;
     let playAllIndex = 0;
 
-
-    // Movement state
+    // Player State
     let shipX = 0;
     let shipY = 0;
     let shipSpeedX = 0;
@@ -1116,32 +1195,35 @@
     let moveInput = { x: 0, y: 0 };
     let isMoving = false;
     let isShootingInput = false; // Separate from canShoot state
+    let activePowerUpType = 'none'; // Track the current power-up ('none', 'rapid', 'double', 'bomb')
 
     // Timers (store IDs for clearing)
     let virusSpawnTimerId = null;
     let powerUpTimerId = null;
     let bossSpawnTimerId = null;
     let weaponRechargeTimeoutId = null;
-    let powerUpEffectTimeoutId = null;
+    let powerUpEffectTimeoutId = null; // Timer for power-up DURATION
     let activeTimeouts = new Set(); // Keep track of misc timeouts
 
     // Game Object Arrays
     let viruses = [];
-    let lasers = [];
-    let powerUps = []; // Store powerup objects { element, x, y, width, height }
+    let lasers = []; // Will store lasers AND bombs
+    let powerUps = []; // Store powerup objects { element, x, y, width, height, type }
     let effects = []; // For explosions, flashes etc. { element, cleanupTimer }
     let bossEnemy = null; // { element, healthBar, healthContainer, x, y, ... }
 
     // Asset paths for preloading
     const IMAGE_ASSETS = [
         'Images/d0948.png', 'Images/ateljee48.png', 'Images/stadskantoor.png',
-        'Images/ateljee16.png', 'Images/digi48.png', 'Images/stadgent128.png', // Ensure stadgent is preloaded
-        'Images/speakeron.png', 'Images/speaker.png' // Corrected speaker image names
+        'Images/ateljee16.png', 'Images/digi48.png', 'Images/stadgent128.png',
+        'Images/speakeron.png', 'Images/speaker.png'
     ];
     const AUDIO_ASSETS = [
         'Audio/laser.mp3', 'Audio/explosion.mp3', 'Audio/alarm.mp3',
         'Audio/bigexplosion.mp3', 'Audio/loser.mp3', 'Audio/powerup.mp3', 'Audio/hit.mp3',
-        'Audio/8bitarcade.mp3', 'Audio/hardcore.mp3', 'Audio/elysium.mp3', 'Audio/kbounce.mp3', 'Audio/ontheroad.mp3', 'Audio/talkinboutloveanthem.mp3', 'Audio/vielleichtvielleicht.mp3'
+        'Audio/8bitarcade.mp3', 'Audio/hardcore.mp3', 'Audio/elysium.mp3', 'Audio/kbounce.mp3', 'Audio/ontheroad.mp3', 'Audio/talkinboutloveanthem.mp3', 'Audio/vielleichtvielleicht.mp3',
+        'Audio/bomb_launch.mp3', // Add new audio files if you have them
+        'Audio/bomb_explode.mp3'
     ];
 
     // --- Initialization ---
@@ -1367,7 +1449,7 @@
         clearInterval(powerUpTimerId); powerUpTimerId = null;
         clearInterval(bossSpawnTimerId); bossSpawnTimerId = null;
         clearTimeout(weaponRechargeTimeoutId); weaponRechargeTimeoutId = null;
-        clearTimeout(powerUpEffectTimeoutId); powerUpEffectTimeoutId = null;
+        clearTimeout(powerUpEffectTimeoutId); powerUpEffectTimeoutId = null; // Clear powerup duration timer
         clearTimeout(previewTimeoutId); previewTimeoutId = null; // ** Clear music preview timer **
         activeTimeouts.forEach(id => clearTimeout(id));
         activeTimeouts.clear();
@@ -1384,7 +1466,7 @@
         isGameOver = false;
         isGameRunning = false; // Will be set true by startGame
         isPaused = false;
-        weaponCooldown = BASE_WEAPON_COOLDOWN;
+        weaponCooldown = BASE_WEAPON_COOLDOWN; // Ensure cooldown is base
         canShoot = true;
         lastShootTime = 0;
         shipSpeedX = 0;
@@ -1395,6 +1477,7 @@
         isPreviewingMusic = false; // ** Reset music preview state **
         isPlayAllActive = false; // ** Reset play all state **
         playAllIndex = 0; // ** Reset play all index **
+        activePowerUpType = 'none'; // Reset active power-up type
         console.log("Variables reset.");
 
         // 3. Reset HUD and UI Elements
@@ -1405,13 +1488,17 @@
         requestAnimationFrame(() => { // Re-enable transition after reset
             weaponChargeBar.style.transition = 'width 0.05s linear';
         });
+         // Remove specific powerup classes from image
+         powerUpImage.classList.remove(...POWERUP_TYPES); // Remove all potential type classes
+         powerUpImage.style.display = 'none'; // Hide it
+         if (spaceship) spaceship.style.filter = ''; // Remove ship glow
         console.log("HUD reset.");
 
         // 4. Clear Dynamic DOM Elements & Arrays
         console.log("Clearing dynamic elements...");
-        clearLasers();
+        clearLasers(); // Also clears bombs if they are in the lasers array
         clearViruses();
-        clearPowerUps();
+        clearPowerUps(); // Hides the image and clears the array
         clearEffects();
         if (bossEnemy) {
             if(bossEnemy.element) bossEnemy.element.remove();
@@ -1621,56 +1708,132 @@
     // --- Shooting ---
 
     function tryToShoot() {
-        if (!canShoot || isPaused) return; // Check pause status
+        if (!canShoot || isPaused) return;
 
         const currentTime = Date.now();
-        if (currentTime - lastShootTime >= weaponCooldown) {
-            shootLaser();
+        // Use BASE_WEAPON_COOLDOWN for check, rapid powerup modifies canShoot timer directly
+        const currentEffectiveCooldown = (activePowerUpType === 'rapid') ? POWERUP_WEAPON_COOLDOWN : BASE_WEAPON_COOLDOWN;
+
+        if (currentTime - lastShootTime >= currentEffectiveCooldown) {
+            fireWeapon(); // Call the appropriate firing function based on power-up
             lastShootTime = currentTime;
             canShoot = false;
             weaponChargeBar.style.width = '0%';
 
-            // Clear previous recharge timeout if it exists
             clearTimeout(weaponRechargeTimeoutId);
             activeTimeouts.delete(weaponRechargeTimeoutId);
 
-
-            // Recharge weapon - store timeout ID
              weaponRechargeTimeoutId = setTimeout(() => {
                  canShoot = true;
-                 if (!isPaused) { // Only visually update if not paused
+                 if (!isPaused) {
                      weaponChargeBar.style.width = '100%';
                  }
-                 activeTimeouts.delete(weaponRechargeTimeoutId); // Remove from tracking
-             }, weaponCooldown);
-            activeTimeouts.add(weaponRechargeTimeoutId); // Add to tracking
+                 activeTimeouts.delete(weaponRechargeTimeoutId);
+             }, currentEffectiveCooldown); // Use the effective cooldown for the timer
+            activeTimeouts.add(weaponRechargeTimeoutId);
 
-            // Animate cooldown bar (visual only, actual cooldown uses timeout)
-            animateWeaponRecharge(weaponCooldown);
+            animateWeaponRecharge(currentEffectiveCooldown); // Animate bar based on effective cooldown
         }
     }
 
-    function shootLaser() {
+    // Renamed shootLaser to fireWeapon, which decides *how* to fire
+    function fireWeapon() {
+        switch (activePowerUpType) {
+            case 'double':
+                shootDoubleLaser();
+                break;
+            case 'bomb':
+                shootLaserBomb();
+                break;
+            case 'rapid': // Rapid just uses faster cooldown, fires single laser
+            case 'none':
+            default:
+                shootSingleLaser();
+                break;
+        }
+    }
+
+    // Original shooting logic
+    function shootSingleLaser() {
         const laserX = shipX + SHIP_WIDTH / 2 - LASER_WIDTH / 2;
-        const laserY = shipY; // Shoot from top of ship
+        const laserY = shipY;
 
         const laser = document.createElement('div');
-        laser.className = 'laser';
+        laser.className = 'laser'; // Standard laser class
         laser.style.left = `${laserX}px`;
         laser.style.top = `${laserY}px`;
         gameContainer.appendChild(laser);
 
-        lasers.push({ element: laser, x: laserX, y: laserY });
+        // Add to lasers array with type info
+        lasers.push({ element: laser, x: laserX, y: laserY, type: 'single' });
         playSound('laser-sound');
     }
+
+    // New: Fires two lasers side-by-side
+    function shootDoubleLaser() {
+        const laserY = shipY;
+        const centerLaserX = shipX + SHIP_WIDTH / 2;
+        const laserX1 = centerLaserX - DOUBLE_SHOT_SPACING / 2 - LASER_WIDTH / 2;
+        const laserX2 = centerLaserX + DOUBLE_SHOT_SPACING / 2 - LASER_WIDTH / 2;
+
+        // Create Laser 1
+        const laser1 = document.createElement('div');
+        laser1.className = 'laser';
+        laser1.style.left = `${laserX1}px`;
+        laser1.style.top = `${laserY}px`;
+        gameContainer.appendChild(laser1);
+        lasers.push({ element: laser1, x: laserX1, y: laserY, type: 'double' });
+
+        // Create Laser 2
+        const laser2 = document.createElement('div');
+        laser2.className = 'laser';
+        laser2.style.left = `${laserX2}px`;
+        laser2.style.top = `${laserY}px`;
+        gameContainer.appendChild(laser2);
+        lasers.push({ element: laser2, x: laserX2, y: laserY, type: 'double' });
+
+        playSound('double-laser-sound'); // Use same or different sound
+    }
+
+    // New: Fires a laser bomb
+    function shootLaserBomb() {
+        const bombX = shipX + SHIP_WIDTH / 2 - LASER_BOMB_WIDTH / 2;
+        const bombY = shipY; // Start at ship's top
+
+        const bomb = document.createElement('div');
+        bomb.className = 'laser-bomb'; // Use the new bomb style
+        bomb.style.left = `${bombX}px`;
+        bomb.style.top = `${bombY}px`;
+        gameContainer.appendChild(bomb);
+
+        // Add to lasers array with specific type and damage info
+        lasers.push({
+            element: bomb,
+            x: bombX,
+            y: bombY,
+            type: 'bomb', // Identify as bomb
+            width: LASER_BOMB_WIDTH,
+            height: LASER_BOMB_HEIGHT,
+            speed: LASER_BOMB_SPEED,
+            damage: LASER_BOMB_DAMAGE_MULTIPLIER
+        });
+        playSound('laser-bomb-sound'); // Use bomb launch sound
+    }
+
 
     function updateLasers() {
         for (let i = lasers.length - 1; i >= 0; i--) {
             const laser = lasers[i];
-            laser.y -= LASER_SPEED;
+             // Safety check if laser was removed in a previous iteration/collision
+             if (!laser || !laser.element) continue;
+            // Use specific speed if defined (for bomb), otherwise default
+            const speed = laser.speed || LASER_SPEED;
+            laser.y -= speed;
             laser.element.style.top = `${laser.y}px`;
 
-            if (laser.y < -LASER_HEIGHT) {
+            // Use specific height if defined (for bomb), otherwise default
+            const height = laser.height || LASER_HEIGHT;
+            if (laser.y < -height) {
                 laser.element.remove();
                 lasers.splice(i, 1);
             }
@@ -1678,7 +1841,9 @@
     }
 
     function clearLasers() {
-        lasers.forEach(laser => laser.element.remove());
+        lasers.forEach(laser => {
+            if (laser.element) laser.element.remove()
+        });
         lasers = [];
     }
 
@@ -1706,12 +1871,6 @@
                  currentRequestId = null; // Animation finished
             }
         }
-         // Cancel any previous animation frame before starting a new one
-         // This scenario is unlikely here as tryToShoot prevents overlapping calls, but good practice
-         // if (currentRequestId) {
-         //     cancelAnimationFrame(currentRequestId);
-         // }
-
          // Check if not paused before starting animation
          if (!isPaused) {
             currentRequestId = requestAnimationFrame(step);
@@ -1776,7 +1935,7 @@
 
         for (let i = viruses.length - 1; i >= 0; i--) {
             // Ensure virus exists before processing (safety check)
-            if (!viruses[i]) continue;
+            if (!viruses[i] || !viruses[i].element) continue;
              const virus = viruses[i];
 
 
@@ -1799,7 +1958,6 @@
                          virus.fadeTimer = setTimeout(() => { // Schedule removal after fade
                              if (virus.element) virus.element.remove();
                              // Remove from array *only after* removal, careful with splice index
-                             // It's safer to mark for removal and clean up later, or use filter, but splice is okay if careful
                              // Check if the element at 'i' is still the one we intended to remove
                              if (viruses[i] === virus) {
                                  viruses.splice(i, 1);
@@ -1881,23 +2039,29 @@
         }
     }
 
-    function damageVirus(virus, index) {
-        virus.health--;
-        playSound('no sound necessary'); // Changed from empty string
+    // Modify damageVirus to accept a damage multiplier
+    function damageVirus(virus, index, damageMultiplier = 1) {
+        // Safety check if virus still exists
+        if (!virus) return false;
 
-        // Visual hit flash
+        virus.health -= (1 * damageMultiplier); // Apply multiplier
+        // Play sound only on actual damage, not overkill
+        if (virus.health + damageMultiplier > 0) { // Check if it wasn't already below 0 before this hit
+            playSound('no sound necessary'); // Changed from empty string
+        }
+
         if (virus.element) {
              virus.element.classList.add('hit');
              const hitTimeout = setTimeout(() => {
-                 // Check if element still exists before removing class
                  if(virus.element) virus.element.classList.remove('hit');
                  activeTimeouts.delete(hitTimeout);
-             }, 100); // Duration of flash
+             }, 100);
             activeTimeouts.add(hitTimeout);
         }
 
 
         if (virus.health <= 0) {
+            // Score points based on original config, regardless of overkill damage
             score += virus.config.points;
             createExplosionEffect(virus.x + virus.config.width / 2, virus.y + virus.config.height / 2);
             playSound('explosion-sound');
@@ -1976,8 +2140,6 @@
              if (virus.fadeTimer) {
                  clearTimeout(virus.fadeTimer);
                  activeTimeouts.delete(virus.fadeTimer);
-                 // Find and remove related removalTimer if it exists (more robust)
-                 // This requires storing the removalTimer ID on the virus object or a map
              }
         });
         viruses = [];
@@ -1994,7 +2156,22 @@
         // Spawn in the upper-middle part of the screen
         const spawnY = Math.random() * (GAME_HEIGHT * 0.4) + GAME_HEIGHT * 0.15;
 
-        // Use the existing image element
+        // --- START: Choose Power-up Type ---
+        const rand = Math.random();
+        let chosenType;
+        if (rand < 0.33) {
+            chosenType = 'rapid';
+        } else if (rand < 0.66) {
+            chosenType = 'double';
+        } else {
+            chosenType = 'bomb';
+        }
+        // --- END: Choose Power-up Type ---
+
+        // Reset classes and apply the chosen one
+        powerUpImage.classList.remove(...POWERUP_TYPES); // Remove all possible type classes
+        powerUpImage.classList.add(chosenType); // Add the class for the correct glow
+
         powerUpImage.style.left = `${spawnX}px`;
         powerUpImage.style.top = `${spawnY}px`;
         powerUpImage.style.display = 'block';
@@ -2004,9 +2181,10 @@
             x: spawnX,
             y: spawnY,
             width: powerUpSize,
-            height: powerUpSize
+            height: powerUpSize,
+            type: chosenType // Store the type
         });
-         console.log("PowerUp Spawned");
+         console.log(`PowerUp Spawned: ${chosenType}`);
     }
 
     function updatePowerUps() {
@@ -2015,31 +2193,32 @@
     }
 
     function activatePowerUp(powerUp, index) {
-        console.log("PowerUp Activated!");
+        const collectedType = powerUp.type; // Get the type from the collected item
+        console.log(`PowerUp Activated: ${collectedType}!`);
         playSound('powerup-sound');
+        createPowerUpCollectEffect(powerUp.x + powerUp.width / 2, powerUp.y + powerUp.height / 2);
 
-         // Create collection visual effect
-         createPowerUpCollectEffect(powerUp.x + powerUp.width / 2, powerUp.y + powerUp.height / 2);
-
-        // Hide the power-up image
+        // Hide the power-up image and remove its specific class
         powerUp.element.style.display = 'none';
+        powerUp.element.classList.remove(collectedType);
         powerUps.splice(index, 1); // Remove from active array
 
-        // Apply effect: Faster shooting
-        weaponCooldown = POWERUP_WEAPON_COOLDOWN;
-        spaceship.style.filter = 'drop-shadow(0 0 15px #0ff)'; // Add glow effect
+        // --- Apply Effect ---
+        activePowerUpType = collectedType; // Set the *active* type for the ship
+        // Apply a standard visual effect to the ship regardless of powerup type
+        spaceship.style.filter = 'drop-shadow(0 0 15px #0ff)'; // Standard cyan glow for any active powerup
 
-        // Clear previous power-up timeout if any
+        // Clear previous power-up effect timeout if any
          clearTimeout(powerUpEffectTimeoutId);
          activeTimeouts.delete(powerUpEffectTimeoutId);
 
 
         // Set timer to remove effect
         powerUpEffectTimeoutId = setTimeout(() => {
-            weaponCooldown = BASE_WEAPON_COOLDOWN;
+            console.log(`PowerUp Expired: ${activePowerUpType}`); // Log which one expired
+            activePowerUpType = 'none'; // Reset active type
             // Check if ship still exists before resetting filter
             if (spaceship) spaceship.style.filter = ''; // Remove glow
-             console.log("PowerUp Expired");
             activeTimeouts.delete(powerUpEffectTimeoutId); // Remove from tracking
         }, POWERUP_DURATION);
         activeTimeouts.add(powerUpEffectTimeoutId); // Add to tracking
@@ -2048,15 +2227,17 @@
     function clearPowerUps() {
         if (powerUpImage) {
              powerUpImage.style.display = 'none'; // Hide the element
+             powerUpImage.classList.remove(...POWERUP_TYPES); // Remove all type classes
         }
         powerUps = []; // Clear the array
+
          // Also clear the effect timeout if active
          if (powerUpEffectTimeoutId) {
              clearTimeout(powerUpEffectTimeoutId);
              activeTimeouts.delete(powerUpEffectTimeoutId);
-             weaponCooldown = BASE_WEAPON_COOLDOWN; // Ensure cooldown resets if cleared mid-powerup
+             activePowerUpType = 'none'; // Ensure type is reset
               // Check if spaceship exists before resetting filter
-             if (spaceship) spaceship.style.filter = '';
+             if (spaceship) spaceship.style.filter = ''; // Ensure glow is removed
          }
     }
 
@@ -2216,11 +2397,15 @@
          playSound('laser-sound'); // Maybe a different sound?
     }
 
-    function damageBoss() {
+    // Modify damageBoss to accept a damage multiplier
+    function damageBoss(damageMultiplier = 1) {
          if (!bossEnemy) return false;
 
-         bossEnemy.health--;
-         playSound('hit-sound'); // Generic hit
+         bossEnemy.health -= (1 * damageMultiplier); // Apply multiplier
+         // Play sound only on actual damage
+         if (bossEnemy.health + damageMultiplier > 0) {
+            playSound('hit-sound'); // Generic hit
+         }
 
         // Update health bar visually
         const healthPercent = Math.max(0, (bossEnemy.health / bossEnemy.maxHealth) * 100);
@@ -2247,8 +2432,8 @@
             if(bossEnemy.healthContainer) bossEnemy.healthContainer.remove();
             bossEnemy = null;
 
-            // Spawn a guaranteed power-up after defeating boss
-             spawnPowerUp();
+            // Spawn a guaranteed *random* power-up after defeating boss
+             spawnPowerUp(); // spawnPowerUp now handles random type selection
 
             return true; // Boss defeated
         }
@@ -2263,18 +2448,29 @@
 
         // 1. Laser <-> Virus/Boss
         for (let i = lasers.length - 1; i >= 0; i--) {
-            // Safety check if laser was removed in a previous iteration
-            if (!lasers[i]) continue;
+            // Safety check if laser was removed in a previous iteration or doesn't exist
+             if (!lasers[i] || !lasers[i].element) continue;
             const laser = lasers[i];
             let laserRemoved = false;
+            // Use specific dimensions if it's a bomb, else defaults
+            const laserW = laser.width || LASER_WIDTH;
+            const laserH = laser.height || LASER_HEIGHT;
+
+            // Determine damage multiplier
+            const damageMultiplier = laser.damage || 1; // Use laser's damage property, default 1
 
             // Check vs Boss first (larger target)
             if (bossEnemy) {
-                if (rectOverlap(laser.x, laser.y, LASER_WIDTH, LASER_HEIGHT, bossEnemy.x, bossEnemy.y, bossEnemy.width, bossEnemy.height)) {
-                     createLaserHitEffect(laser.x + LASER_WIDTH / 2, laser.y); // Hit flash at top of laser
-                    laser.element.remove();
+                if (rectOverlap(laser.x, laser.y, laserW, laserH, bossEnemy.x, bossEnemy.y, bossEnemy.width, bossEnemy.height)) {
+                     if (laser.type === 'bomb') {
+                        createBombExplosionEffect(laser.x + laserW / 2, laser.y); // Bomb-specific explosion visual
+                        playSound('bomb-explosion-sound');
+                     } else {
+                        createLaserHitEffect(laser.x + laserW / 2, laser.y);
+                     }
+                     laser.element.remove();
                     lasers.splice(i, 1);
-                    damageBoss(); // damageBoss returns true if defeated
+                    damageBoss(damageMultiplier); // Apply damage multiplier
                     laserRemoved = true;
                     continue; // Laser is gone, move to next laser
                 }
@@ -2282,17 +2478,22 @@
 
              // Check vs Viruses (if laser still exists)
             for (let j = viruses.length - 1; j >= 0; j--) {
-                 // Safety check if virus was removed
+                 // Safety check if virus was removed or doesn't exist
                  if (!viruses[j]) continue;
                  if (laserRemoved) break; // Stop checking viruses if laser already hit boss or another virus
 
                 const virus = viruses[j];
-                if (rectOverlap(laser.x, laser.y, LASER_WIDTH, LASER_HEIGHT, virus.x, virus.y, virus.config.width, virus.config.height)) {
-                    createLaserHitEffect(laser.x + LASER_WIDTH / 2, laser.y); // Hit flash
+                if (rectOverlap(laser.x, laser.y, laserW, laserH, virus.x, virus.y, virus.config.width, virus.config.height)) {
+                    if (laser.type === 'bomb') {
+                        createBombExplosionEffect(laser.x + laserW / 2, laser.y);
+                        playSound('bomb-explosion-sound');
+                    } else {
+                        createLaserHitEffect(laser.x + laserW / 2, laser.y);
+                    }
                     laser.element.remove();
                     lasers.splice(i, 1);
                      // damageVirus handles removal if health <= 0 and returns true if destroyed
-                    const destroyed = damageVirus(virus, j);
+                    const destroyed = damageVirus(virus, j, damageMultiplier); // Apply damage multiplier
                     laserRemoved = true;
                      // If virus was destroyed, we already spliced it, so break inner loop.
                      // If not destroyed, laser is still gone, so break inner loop.
@@ -2433,7 +2634,7 @@
 
     function createShipDamageEffect() {
         // Flash ship red (using filter) only if powerup is not active
-        if (spaceship && weaponCooldown === BASE_WEAPON_COOLDOWN) {
+        if (spaceship && activePowerUpType === 'none') {
             spaceship.style.filter = 'brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(5)'; // Reddish flash
             const filterTimeout = setTimeout(() => {
                 // Check if ship still exists
@@ -2442,8 +2643,8 @@
             }, 150);
             activeTimeouts.add(filterTimeout);
         } else if (spaceship) {
-             // If powerup IS active, maybe just a quick brightness flash?
-             const originalFilter = spaceship.style.filter;
+             // If powerup IS active, just a quick brightness flash on top of the existing glow
+             const originalFilter = spaceship.style.filter; // Should be the powerup glow
              spaceship.style.filter = `${originalFilter} brightness(2.0)`;
               const flashTimeout = setTimeout(() => {
                  // Check if ship still exists
@@ -2480,9 +2681,6 @@
              shakeId = requestAnimationFrame(shakeStep);
          }
          // Cancel any existing shake before starting a new one
-         // This is tricky without storing the ID globally. A simpler approach
-         // might be acceptable where shakes can briefly overlap.
-         // if (shakeId) cancelAnimationFrame(shakeId); // Potential issue if called rapidly
          shakeId = requestAnimationFrame(shakeStep);
     }
 
@@ -2505,6 +2703,30 @@
          }, 200); // Match animation duration
          activeTimeouts.add(cleanupTimer);
      }
+
+    // New: Effect for Bomb Explosion
+    function createBombExplosionEffect(x, y) {
+         const flash = document.createElement('div');
+         flash.className = 'bomb-explosion-flash'; // Use the new CSS class
+         // Center the larger flash
+         flash.style.left = `${x - 30}px`;
+         flash.style.top = `${y - 30}px`;
+         gameContainer.appendChild(flash);
+         effects.push({ element: flash });
+
+         const cleanupTimer = setTimeout(() => {
+             if (flash.parentNode === gameContainer) {
+                 flash.remove();
+             }
+             const index = effects.findIndex(eff => eff.element === flash);
+             if (index > -1) effects.splice(index, 1);
+             activeTimeouts.delete(cleanupTimer);
+         }, 250); // Match animation duration
+          activeTimeouts.add(cleanupTimer);
+
+         // Optionally add smaller particle effects too
+         createExplosionEffect(x, y); // Reuse existing smaller explosion
+    }
 
       function createPowerUpCollectEffect(x, y) {
          const ring = document.createElement('div');
@@ -2537,8 +2759,6 @@
              }
          });
          effects = [];
-          // Clear any related timeouts tracked separately if needed
-          // (Timeouts are already cleared in resetGame via activeTimeouts set)
      }
 
 
@@ -2560,20 +2780,22 @@
         if (sound) {
             // Don't reset time if already playing (allows overlapping sounds like rapid hits)
             // unless it's a sound that shouldn't overlap much (like explosion)
-            if (soundId === 'explosion-sound' || soundId === 'bigexplosion-sound' || soundId === 'alarm-sound' || soundId === 'loser-sound' || soundId === 'powerup-sound' || sound.paused) {
+            if (soundId === 'explosion-sound' || soundId === 'bigexplosion-sound' || soundId === 'alarm-sound' || soundId === 'loser-sound' || soundId === 'powerup-sound' || soundId === 'bomb-explosion-sound' || soundId === 'bomb-launch-sound' || sound.paused) {
                  sound.currentTime = 0;
             }
             // Adjust volumes per sound type
             let volume = 0.8;
-            if (soundId === 'laser-sound') volume = 0.5;
+            if (soundId === 'laser-sound' || soundId === 'double-laser-sound') volume = 0.4; // Lower laser slightly more
             else if (soundId === 'hit-sound') volume = 0.6;
             else if (soundId === 'explosion-sound') volume = 0.6;
             else if (soundId === 'alarm-sound') volume = 0.5;
+            else if (soundId === 'bomb-launch-sound') volume = 0.7;
+            else if (soundId === 'bomb-explosion-sound') volume = 0.8;
             sound.volume = volume;
 
             sound.play().catch(e => {
                  // Ignore errors often caused by rapid plays before previous finished loading/playing
-                 // console.warn(`Sound play failed for ${soundId}:`, e);
+                  // console.warn(`Sound play failed for ${soundId}:`, e);
                  });
         } else {
              console.warn(`Sound element not found: ${soundId}`);
@@ -2698,22 +2920,16 @@
      }
 
       function fadeOutAudio(audioElement, duration) {
-         // ** Stop Play All logic when fading out music **
-         // (Unless it's just a temporary fade like pause?) - Let's stop it fully on game over/exit.
-         // Keep track if fade was initiated by game end/exit vs pause
-         // --> Handled in gameOver and exitToMenu setting isPlayAllActive = false
-
          if (!audioElement || audioElement.paused || soundMuted) {
              if (audioElement && !soundMuted) {
                   audioElement.pause(); // Ensure paused
-                  // Don't reset currentTime here, might interfere with resume
              }
              return Promise.resolve(); // Return a resolved promise
          }
 
          return new Promise((resolve) => {
              const startVolume = audioElement.volume;
-             const fadeStartTime = performance.now(); // Use performance.now for accuracy
+             const fadeStartTime = performance.now();
              let fadeAnimFrame;
 
              function fadeStep(now) {
@@ -2721,14 +2937,13 @@
                  const progress = Math.min(elapsed / duration, 1);
                  let newVolume = startVolume * (1 - progress);
 
-                 if (newVolume <= 0.01 || soundMuted || !audioElement.src) { // Also check if src is gone
-                     newVolume = 0; // Ensure it hits zero
+                 if (newVolume <= 0.01 || soundMuted || !audioElement.src) {
+                     newVolume = 0;
                      audioElement.volume = newVolume;
                      audioElement.pause();
-                    //  audioElement.volume = startVolume; // Reset volume for next time? NO - could cause issues if played right after. Reset volume on *play*.
                      if (fadeAnimFrame) cancelAnimationFrame(fadeAnimFrame);
                      fadeAnimFrame = null;
-                     resolve(); // Resolve the promise when done
+                     resolve();
                  } else {
                      audioElement.volume = newVolume;
                      fadeAnimFrame = requestAnimationFrame(fadeStep);
@@ -2752,6 +2967,9 @@
             document.getElementById('loser-sound'),
             document.getElementById('powerup-sound'),
             document.getElementById('hit-sound'),
+            document.getElementById('double-laser-sound'), // Mute/unmute new sounds
+            document.getElementById('laser-bomb-sound'),
+            document.getElementById('bomb-explosion-sound'),
             backgroundMusicPlayer // Include background music player
         ];
         gameAudios.forEach(audio => {
@@ -2760,13 +2978,9 @@
 
         // Handle background music state
         if (soundMuted) {
-            // If muted, pause the background music immediately (no fade needed for mute toggle)
             backgroundMusicPlayer.pause();
         } else {
-            // If unmuted, resume ONLY if game is running/paused or play all is active
-             // And NOT during preview
             if (!isPreviewingMusic && (isGameRunning || isPaused || isPlayAllActive)) {
-                 // Ensure src is correct before playing, especially for playAll
                  if (isPlayAllActive && musicTracks.length > 0) {
                      if (backgroundMusicPlayer.currentSrc !== musicTracks[playAllIndex]) {
                          backgroundMusicPlayer.src = musicTracks[playAllIndex];
@@ -2776,14 +2990,11 @@
                            backgroundMusicPlayer.src = currentMusicSelection;
                       }
                  }
-                 // Only play if it was actually supposed to be playing
-                 if (isGameRunning || isPlayAllActive) { // Don't auto-play if just paused on start screen etc.
+                 if (isGameRunning || isPlayAllActive) {
                     backgroundMusicPlayer.play().catch(e => console.warn("Resume music on unmute failed:", e));
                  }
             }
-            // If unmuting during preview, the preview logic should handle playback if needed.
             else if (isPreviewingMusic) {
-                // Re-trigger play for preview if it was paused by mute
                 backgroundMusicPlayer.play().catch(e => console.warn("Resume preview on unmute failed:", e));
             }
         }
@@ -3006,39 +3217,35 @@
 
               // If weapon was recharging, ensure bar visually updates and timer continues
               if (!canShoot && weaponRechargeTimeoutId) {
-                  // Calculate remaining time accurately BEFORE pause
-                  // This requires storing the pause start time and calculating elapsed on resume
-                  // Simpler: Restart the visual animation based on current canShoot status
+                  // Recalculate remaining time and restart the visual animation + timer
                   const timeSinceShot = Date.now() - lastShootTime;
-                  const timeRemaining = weaponCooldown - timeSinceShot;
+                  const currentEffectiveCooldown = (activePowerUpType === 'rapid') ? POWERUP_WEAPON_COOLDOWN : BASE_WEAPON_COOLDOWN;
+                  const timeRemaining = currentEffectiveCooldown - timeSinceShot;
 
                   if (timeRemaining > 0) {
-                       const progress = Math.max(0, timeSinceShot / weaponCooldown);
+                       const progress = Math.max(0, timeSinceShot / currentEffectiveCooldown);
                        weaponChargeBar.style.width = `${progress * 100}%`;
-                       // Restart visual animation for the remaining duration
-                       animateWeaponRecharge(timeRemaining);
+                       animateWeaponRecharge(timeRemaining); // Restart visual for remaining
 
-                       // Clear old timeout and set a new one for the remaining time
                        clearTimeout(weaponRechargeTimeoutId);
                        activeTimeouts.delete(weaponRechargeTimeoutId);
                        weaponRechargeTimeoutId = setTimeout(() => {
                            canShoot = true;
-                           if (!isPaused) weaponChargeBar.style.width = '100%'; // Update bar if still not paused
+                           if (!isPaused) weaponChargeBar.style.width = '100%';
                            activeTimeouts.delete(weaponRechargeTimeoutId);
                        }, timeRemaining);
                        activeTimeouts.add(weaponRechargeTimeoutId);
 
                   } else {
-                       // Should have already become true, but double check
                        canShoot = true;
                        weaponChargeBar.style.width = '100%';
                   }
               } else if (canShoot) {
                    weaponChargeBar.style.width = '100%'; // Ensure bar is full if ready
               }
-
-             // Resume other timers/animations if necessary (more complex state management)
-             // The game loop handles resuming movement/updates automatically.
+              // Powerup timer needs similar handling if paused? Less critical, maybe just let it run.
+              // Or store pause start time and adjust end time on resume.
+              // Simpler for now: powerup timer keeps running during pause.
         }
     }
 
