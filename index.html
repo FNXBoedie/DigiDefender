@@ -1045,8 +1045,8 @@
     const POWERUP_WEAPON_COOLDOWN = 60; // Faster powerup cooldown
     const POWERUP_DURATION = 6000; // 6 seconds
     const POWERUP_SPAWN_INTERVAL = 25000; // 25 seconds
-    const BOSS_SPAWN_SCORE_THRESHOLD = 1000; // Score needed for boss possibility
-    const BOSS_SPAWN_CHECK_INTERVAL = 90000; // Check every 90 seconds after threshold
+    const BOSS_SPAWN_SCORE_THRESHOLD = 0; // Score needed for boss possibility
+    const BOSS_SPAWN_CHECK_INTERVAL = 120000; // Check every 120 seconds after threshold
     const BOSS_SPAWN_CHANCE = 1.00; // 100% chance per check
     const MAX_DEDUCTIONS = 10;
     const STARFIELD_SCROLL_SPEED = 0.3; // Pixels per frame
@@ -1065,16 +1065,16 @@
         ateljee: { health: 2, baseSpeed: 1.8, points: 200, width: 48, height: 48, fragmentCount: 6, deduction: 1, subsidyHit: 0, image: 'Images/ateljee48.png', fragmentImage: 'Images/ateljee16.png', fragmentWidth: 32, fragmentHeight: 32 },
         stadskantoor: { health: 2, baseSpeed: 1.5, points: 100, width: 48, height: 48, fragmentCount: 4, deduction: 1, subsidyHit: 0, image: 'Images/stadskantoor.png', fragmentImage: 'Images/stadskantoor.png', fragmentWidth: 32, fragmentHeight: 32 },
         // ** NEW Boss minion variant using stadgent image **
-        stadgent_minion: { health: 1, baseSpeed: 1.4, points: 50, width: 48, height: 48, fragmentCount: 0, deduction: 0, subsidyHit: 12.5, image: 'Images/stadgent128.png', /* No fragment image needed */ fragmentWidth: 72, fragmentHeight: 72 }
+        stadgent_minion: { health: 1, baseSpeed: 1.4, points: 50, width: 48, height: 48, fragmentCount: 2, deduction: 0, subsidyHit: 12.5, image: 'Images/stadgent128.png', fragmentImage: 'Images/stadgent128.png', fragmentWidth: 32, fragmentHeight: 32 }
     };
 
     // ** BOSS_CONFIG uses stadgent image **
     const BOSS_CONFIG = {
-        health: 60, // Increased health
-        points: 3000,
-        width: 128,
+        health: 80, // Increased health
+        points: 5000,
+        width: 256,
         height: 128,
-        attackInterval: 1800, // Slightly faster attacks
+        attackInterval: 2200, // Slightly slower attacks
         moveSpeedX: 2.0,
         image: 'Images/stadgent128.png' // Correct boss image
     };
