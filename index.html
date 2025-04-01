@@ -36,7 +36,7 @@
             /* Removed fixed width/height */
             max-width: 1200px; /* Maximum size */
             max-height: 750px;
-            width: 90vw; /* Use viewport width, leaves small margin */
+            height: 100vh; 
             aspect-ratio: 1200 / 750; /* Maintain aspect ratio */
             margin: auto; /* Center within the flex body */
             position: relative;
@@ -45,16 +45,9 @@
             overflow: hidden;
             background: linear-gradient(180deg, rgba(1, 0, 2, 0.99) 0%, rgba(3, 1, 7, 0.99) 100%); /* Near-black gradient */
             border-radius: 12px; /* Slightly more rounded */
-            transition: transform 0.1s ease; /* For screen shake */
-		/* Ensure the container height doesn't stretch beyond the viewport */
-        min-height: 90vh; /* Minimum height to be 50% of viewport height */
-        max-height: 95vh; /* Limit height to 75% of viewport height */
-		
+            transition: transform 0.1s ease; /* For screen shake */		
 }
 	
-
-        /* Removed the media query that forced 100vw/100vh, aspect-ratio handles scaling now */
-
         /* Enhanced Starfield Background */
         @keyframes starfieldAnim {
             0% { background-position-y: 0px; }
@@ -98,9 +91,7 @@
         #spaceship {
             position: absolute;
             width: 60px;
-            height: 80px;
-            /* Positioning done by JS using shipX, shipY */
-            /* left: 50%; top: 80%; */
+            height: 80px;          
             transform: translate(0, 0); /* Use direct positioning via JS, no translate offset needed */
             z-index: 10;
             transition: transform 0.1s ease, filter 0.2s ease;
@@ -1000,9 +991,9 @@ font-weight: 700;
     <audio id="loser-sound" src="Audio/loser.mp3" preload="auto"></audio>
     <audio id="powerup-sound" src="Audio/powerup.mp3" preload="auto"></audio>
     <audio id="hit-sound" src="Audio/hit.mp3" preload="auto"></audio>
-    <audio id="double-laser-sound" src="Audio/laser.mp3" preload="auto"></audio> <!-- Reuse or replace -->
-    <audio id="laser-bomb-sound" src="Audio/bomb_launch.mp3" preload="auto"></audio> <!-- Ensure you have bomb_launch.mp3 -->
-    <audio id="bomb-explosion-sound" src="Audio/bomb_explode.mp3" preload="auto"></audio> <!-- Ensure you have bomb_explode.mp3 -->
+    <audio id="double-laser-sound" src="Audio/doublelaser.mp3" preload="auto"></audio> 
+    <audio id="laser-bomb-sound" src="Audio/bomba.mp3"></audio> 
+    
 
     <!-- Background Music Player -->
     <audio id="background-music-player" loop></audio>
@@ -1049,14 +1040,14 @@ font-weight: 700;
     const BASE_WEAPON_COOLDOWN = 180; // Milliseconds
     const POWERUP_WEAPON_COOLDOWN = 60; // For rapid fire
     const POWERUP_DURATION = 8000; // 8 seconds
-    const POWERUP_SPAWN_INTERVAL = 25000; // 25 seconds (can adjust)
+    const POWERUP_SPAWN_INTERVAL = 5000; // 25 seconds (can adjust)
     const BOSS_SPAWN_SCORE_THRESHOLD = 0; // Score needed for boss
     const BOSS_SPAWN_CHECK_INTERVAL = 120000; // Check every 2 mins
     const BOSS_SPAWN_CHANCE = 1.00; // 100% chance per check
     const MAX_DEDUCTIONS = 10;
     const MUSIC_PREVIEW_DURATION = 20000; // 20 seconds
     const LASER_BOMB_SPEED = 7; // Slightly slower bomb
-    const LASER_BOMB_WIDTH = 24; // Matched CSS
+    const LASER_BOMB_WIDTH = 34; // Matched CSS
     const LASER_BOMB_HEIGHT = 24; // Matched CSS
     const LASER_BOMB_DAMAGE_MULTIPLIER = 3;
     const DOUBLE_SHOT_SPACING = 25;
@@ -1146,7 +1137,7 @@ font-weight: 700;
     const AUDIO_ASSETS = [
         'Audio/laser.mp3', 'Audio/explosion.mp3', 'Audio/alarm.mp3',
         'Audio/bigexplosion.mp3', 'Audio/loser.mp3', 'Audio/powerup.mp3', 'Audio/hit.mp3',
-        'Audio/bomb_launch.mp3', 'Audio/bomb_explode.mp3',
+        'Audio/bomba.mp3', 'Audio/doublelaser.mp3',
         'Audio/8bitarcade.mp3', 'Audio/hardcore.mp3', 'Audio/elysium.mp3',
         'Audio/kbounce.mp3', 'Audio/ontheroad.mp3', 'Audio/talkinboutloveanthem.mp3',
         'Audio/vielleichtvielleicht.mp3'
@@ -2211,18 +2202,26 @@ font-weight: 700;
         const sound = document.getElementById(soundId);
         if (sound) {
             // Allow short sounds to overlap slightly, reset longer ones or if paused
-            const shortSounds = ['laser-sound', 'double-laser-sound', 'hit-sound'];
+            const shortSounds = ['laser-sound', 'double-laser-sound', 'hit-sound', 'laser-bomb-sound'];
             if (!shortSounds.includes(soundId) || sound.paused) {
                  sound.currentTime = 0; // Reset playback position
             }
             // Optional: Adjust volume per sound type
-            let volume = 0.7; // Base volume
-            if (soundId.includes('laser')) volume = 0.35;
-            else if (soundId === 'hit-sound') volume = 0.5;
-            else if (soundId.includes('explosion')) volume = 0.6;
-            else if (soundId === 'alarm-sound') volume = 0.45;
-            else if (soundId === 'powerup-sound') volume = 0.55;
-            else if (soundId === 'loser-sound') volume = 0.7;
+            if (soundId === 'double-laser-sound' || soundId === 'laser-bomb-sound') {
+    volume = 0.3; // Very quiet for these specific sounds
+} else if (soundId === 'laser-sound') {
+    volume = 0.5; // Volume for generic laser sounds
+} else if (soundId === 'hit-sound') {
+    volume = 0.5;
+} else if (soundId === 'explosion-sound') {
+    volume = 0.3;
+} else if (soundId === 'alarm-sound') {
+    volume = 0.45;
+} else if (soundId === 'powerup-sound') {
+    volume = 0.55;
+} else if (soundId === 'loser-sound') {
+    volume = 0.7;
+}
             sound.volume = volume;
 
             // Play the sound, catch errors (e.g., user hasn't interacted yet)
